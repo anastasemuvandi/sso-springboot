@@ -1,0 +1,18 @@
+# Ministry of Agriculture and Animal Resources — app `kubaka-web` (configs/institutions.yaml),
+# client roles viewer | editor | approver.
+server:
+  port: ${PORT:8081}
+
+gorsso:
+  client-id: ${GORSSO_CLIENT_ID:minagri-kubaka-web}
+  institution:
+    slug: minagri
+  join-key:
+    column: ${GORSSO_JOIN_COLUMN:nid}
+
+sample:
+  display-name: Ministry of Agriculture and Animal Resources
+  records:
+    - { id: "FRM-0001", title: "Cooperative Twisungane (Musanze) — maize", kind: farmer }
+    - { id: "FRM-0002", title: "Uwimana Claudine (Nyagatare) — dairy", kind: farmer }
+    - { id: "PRM-0107", title: "Irrigation permit — Bugesera marshland", kind: permit }

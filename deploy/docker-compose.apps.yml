@@ -1,0 +1,288 @@
+# ---------------------------------------------------------------------------
+# GoRSSO apps, on top of deploy/docker-compose.base.yml. Together they are the dev stack:
+#
+#   make start   = docker compose -p gorsso -f deploy/docker-compose.base.yml \
+#                                 -f deploy/docker-compose.apps.yml up -d --build
+#   make seed    = ... run --rm seed          (re-run the idempotent seeder)
+#
+# Order on `up`: postgres -> keycloak (imports configs/realms) -> seed (one-shot: institutions
+# minagri + minisante, control-plane clients with the secrets below, demo users, FGAP v2)
+# -> wrapper -> console-bff. Everything else only needs Postgres/Redis.
+#
+# Published (host) ports, each overridable (deploy/.env.example):
+#   Keycloak        http://localhost:${HOST_PORT_KEYCLOAK:-8080}    (admin / admin)
+#   wrapper         http://localhost:${HOST_PORT_WRAPPER:-8000}     (/docs/api)
+#   console         http://localhost:${HOST_PORT_CONSOLE:-3001}     (superadmin / GorSsoDev#2026)
+#   audit-service   http://localhost:${HOST_PORT_AUDIT:-8001}
+#   notification    http://localhost:${HOST_PORT_NOTIFICATION:-8002}
+#   ippis-mock      http://localhost:${HOST_PORT_IPPIS:-8003}       (container port 8002)
+#   MailHog         http://localhost:${HOST_PORT_MAILHOG:-8025}
+#   Adminer         http://localhost:${HOST_PORT_ADMINER:-8081}     (server: postgres)
+#   Postgres        localhost:${HOST_PORT_POSTGRES:-5435}           Redis  localhost:${HOST_PORT_REDIS:-6380}
+#
+# Every secret here is a DEV default. The staging/prod overlays require real ones (${VAR:?}).
+# Services that support it also read <NAME>_FILE (Docker secrets).
+# ---------------------------------------------------------------------------
+
+x-public:
+  keycloak: &public-keycloak ${PUBLIC_KEYCLOAK_URL:-http://localhost:${HOST_PORT_KEYCLOAK:-8080}}
+  wrapper: &public-wrapper ${PUBLIC_WRAPPER_URL:-http://localhost:${HOST_PORT_WRAPPER:-8000}}
+  console: &public-console ${PUBLIC_CONSOLE_URL:-http://localhost:${HOST_PORT_CONSOLE:-3001}}
+
+services:
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    ports:
+      - "${HOST_BIND:-127.0.0.1}:${HOST_PORT_REDIS:-6380}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # One-shot, idempotent dev seeder (tools/seeder). Terraform is the production onboarding path.
+  seed:
+    build:
+      context: ..
+      dockerfile: tools/seeder/Dockerfile
+    image: ${REGISTRY:-gorsso}/seeder:${TAG:-dev}
+    restart: "no"
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: government-internal
+      KEYCLOAK_ADMIN_USERNAME: ${KC_ADMIN_USERNAME:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
+      SEED_INSTITUTIONS: ${SEED_INSTITUTIONS:-minagri,minisante}
+      SSO_CLIENT_SECRET: ${SSO_CLIENT_SECRET:-gorsso-dev-sso-client}
+      ADMIN_UI_CLIENT_SECRET: ${ADMIN_UI_CLIENT_SECRET:-gorsso-dev-admin-ui}
+      WRAPPER_PUBLIC_URL: *public-wrapper
+      CONSOLE_PUBLIC_URLS: ${CONSOLE_PUBLIC_URLS:-${PUBLIC_CONSOLE_URL:-http://localhost:${HOST_PORT_CONSOLE:-3001}}}
+      SEED_DEMO_PASSWORD: ${SEED_DEMO_PASSWORD:-GorSsoDev#2026}
+      SEED_SAMPLE_SPAS: ${SEED_SAMPLE_SPAS:-minagri-kubaka-spa=http://localhost:5173,minisante-hmis-spa=http://localhost:5174}
+      SEED_REALM_SMTP_HOST: mailhog
+      SEED_REALM_SMTP_PORT: "1025"
+    volumes:
+      # The live configs, so a registry/template edit is picked up by `make seed` without a rebuild.
+      - ../configs:/app/configs:ro
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+  wrapper:
+    build:
+      context: ..
+      dockerfile: deploy/docker/sso-wrapper.Dockerfile
+    image: ${REGISTRY:-gorsso}/sso-wrapper:${TAG:-dev}
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      DEBUG: "false"
+      # seed-mirror: fill the sso_identity employee mirror with the dev roster at startup (idempotent;
+      # refused outside dev), so /employees and the access matrix have rows.
+      SPRING_PROFILES_ACTIVE: ${WRAPPER_PROFILES:-seed-mirror}
+      API_BASE_URL: *public-wrapper
+      SECRET_KEY: ${WRAPPER_SECRET_KEY:-gorsso-dev-wrapper-secret-key-not-for-production-000000}
+      ACCESS_MATRIX_SIGNING_KEY: ${ACCESS_MATRIX_SIGNING_KEY:-gorsso-dev-access-matrix-signing-key-0000}
+      # Comma-separated; never '*'. The console, the wrapper's own pages, the sample SPAs.
+      ALLOWED_ORIGINS: ${WRAPPER_ALLOWED_ORIGINS:-http://localhost:${HOST_PORT_CONSOLE:-3001},http://localhost:${HOST_PORT_WRAPPER:-8000},http://localhost:5173,http://localhost:5174}
+      # Server URL (docker hostname) vs public URL / issuer (browser-facing, = KC_HOSTNAME).
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_PUBLIC_URL: *public-keycloak
+      KEYCLOAK_LOCAL_ISSUER: *public-keycloak
+      KEYCLOAK_REALM: government-internal
+      KEYCLOAK_CLIENT_ID: sso-client
+      KEYCLOAK_CLIENT_SECRET: ${SSO_CLIENT_SECRET:-gorsso-dev-sso-client}
+      KEYCLOAK_ADMIN_USERNAME: ${KC_ADMIN_USERNAME:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
+      DELEGATED_EXECUTE_AS_CALLER: "true"
+      ACCESS_DEFAULT_DENY: "true"
+      # DEV ONLY: the two sample SPAs are public PKCE clients, and Keycloak cannot attach
+      # authorization policies to a public client, so default-deny would refuse every login to
+      # them. They are exempted here and nowhere else; staging/prod overlays reset this list.
+      ACCESS_ENFORCEMENT_EXEMPT_CLIENTS: ${ACCESS_ENFORCEMENT_EXEMPT_CLIENTS:-sso-client,sso-admin-ui,account,account-console,admin-cli,broker,realm-management,security-admin-console,minagri-kubaka-spa,minisante-hmis-spa}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      AUDIT_SERVICE_URL: http://audit-service:8001
+      AUDIT_API_KEY: ${AUDIT_API_KEY:-gorsso-dev-audit-key}
+      IPPIS_BASE_URL: ${IPPIS_SERVER_URL:-http://ippis-mock:8002}
+      IPPIS_API_KEY: ${IPPIS_API_KEY:-gorsso-dev-ippis-key}
+      IPPIS_WEBHOOK_SECRET: ${IPPIS_WEBHOOK_SECRET:-gorsso-dev-ippis-webhook}
+      # The employee mirror: its own database and role (deploy/postgres/initdb), never Keycloak's.
+      IDENTITY_DATABASE_URL: jdbc:postgresql://postgres:5432/sso_identity
+      IDENTITY_DATABASE_USER: sso_identity_rw
+      IDENTITY_DATABASE_PASSWORD: ${IDENTITY_DB_PASSWORD:-sso-identity-dev}
+      # The wrapper's own mail (welcome, setup link, access granted/revoked) -> MailHog.
+      SMTP_HOST: ${SMTP_HOST:-mailhog}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_AUTH: ${SMTP_AUTH:-false}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
+      SMTP_FROM: ${SMTP_FROM:-sso-noreply@dev.sso.gov.rw}
+      SSO_LOGIN_URL: *public-console
+    ports:
+      - "${HOST_PORT_WRAPPER:-8000}:8000"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+        required: false
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+      retries: 8
+
+  console-bff:
+    build:
+      context: ..
+      dockerfile: console-bff/Dockerfile
+    image: ${REGISTRY:-gorsso}/console-bff:${TAG:-dev}
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      SSO_BASE_URL: http://wrapper:8000
+      SSO_PUBLIC_URL: *public-wrapper
+      ADMIN_UI_CLIENT_ID: sso-admin-ui
+      ADMIN_UI_CLIENT_SECRET: ${ADMIN_UI_CLIENT_SECRET:-gorsso-dev-admin-ui}
+      # Must be registered on sso-admin-ui (the seeder does, from CONSOLE_PUBLIC_URLS).
+      ADMIN_UI_REDIRECT_URI: ${PUBLIC_CONSOLE_URL:-http://localhost:${HOST_PORT_CONSOLE:-3001}}/login/oauth2/code/sso-admin-ui
+      ADMIN_UI_POST_LOGOUT_REDIRECT_URI: ${PUBLIC_CONSOLE_URL:-http://localhost:${HOST_PORT_CONSOLE:-3001}}/
+      REDIS_URL: redis://redis:6379/0
+      # Plain-http dev: browsers drop Secure cookies, so the session cookie must not be Secure here.
+      COOKIE_SECURE: "false"
+    ports:
+      - "${HOST_PORT_CONSOLE:-3001}:3001"
+    depends_on:
+      redis:
+        condition: service_healthy
+      wrapper:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:3001/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+
+  audit-service:
+    build:
+      context: ..
+      dockerfile: audit-service/Dockerfile
+    image: ${REGISTRY:-gorsso}/audit-service:${TAG:-dev}
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      AUDIT_API_KEY: ${AUDIT_API_KEY:-gorsso-dev-audit-key}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/audit
+      SPRING_DATASOURCE_USERNAME: audit
+      SPRING_DATASOURCE_PASSWORD: ${AUDIT_DB_PASSWORD:-audit-dev}
+      RUN_MIGRATIONS: "true"
+      REDIS_URL: redis://redis:6379/1
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_HEALTH_URL: http://keycloak:9000/health/ready
+      KEYCLOAK_REALM: government-internal
+      KEYCLOAK_ADMIN_USERNAME: ${KC_ADMIN_USERNAME:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
+      WRAPPER_URL: http://wrapper:8000
+      ADMIN_UI_URL: http://console-bff:3001
+    ports:
+      - "${HOST_PORT_AUDIT:-8001}:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8001/actuator/health/readiness"]
+      interval: 15s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+
+  notification-service:
+    build:
+      context: ..
+      dockerfile: notification-service/Dockerfile
+    image: ${REGISTRY:-gorsso}/notification-service:${TAG:-dev}
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      NOTIFICATION_DATABASE_JDBC_URL: jdbc:postgresql://postgres:5432/notifications
+      NOTIFICATION_DATABASE_USER: notification
+      NOTIFICATION_DATABASE_PASSWORD: ${NOTIFICATION_DB_PASSWORD:-notification-dev}
+      NOTIFICATION_API_KEY: ${NOTIFICATION_API_KEY:-gorsso-dev-notification-key}
+      AUDIT_SERVICE_URL: http://audit-service:8001
+      AUDIT_API_KEY: ${AUDIT_API_KEY:-gorsso-dev-audit-key}
+      SMTP_HOST: ${SMTP_HOST:-mailhog}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USE_TLS: "false"
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-security@dev.sso.gov.rw}
+    ports:
+      - "${HOST_PORT_NOTIFICATION:-8002}:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      audit-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8002/actuator/health/readiness"]
+      interval: 15s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+
+  # Simulated IPPIS (GESB) HR feed. Dev/test only; staging/prod point IPPIS_SERVER_URL at real IPPIS.
+  ippis-mock:
+    build:
+      context: ..
+      dockerfile: ippis-mock/Dockerfile
+    image: ${REGISTRY:-gorsso}/ippis-mock:${TAG:-dev}
+    restart: unless-stopped
+    environment:
+      IPPIS_API_KEY: ${IPPIS_API_KEY:-gorsso-dev-ippis-key}
+      # JSON persistence of control-plane edits (POST/PATCH/DELETE); `make clean` reseeds.
+      IPPIS_MOCK_DATA_FILE: /ippis/data/employees.json
+      # Signed push to the wrapper's POST /ippis/events (on only when both are set).
+      SSO_EVENTS_URL: http://wrapper:8000/ippis/events
+      IPPIS_WEBHOOK_SECRET: ${IPPIS_WEBHOOK_SECRET:-gorsso-dev-ippis-webhook}
+    volumes:
+      - ippis_data:/ippis/data
+    ports:
+      # Container 8002, published on 8003 (the notification service has host 8002).
+      - "${HOST_PORT_IPPIS:-8003}:8002"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8002/health"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT_MAILHOG:-8025}:8025"
+
+  # Postgres web GUI (server: postgres). Dev only; the staging/prod overlays disable it.
+  adminer:
+    image: adminer:4
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - "${HOST_BIND:-127.0.0.1}:${HOST_PORT_ADMINER:-8081}:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  redis_data:
+  ippis_data:

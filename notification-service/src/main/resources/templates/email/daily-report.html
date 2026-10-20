@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head><meta charset="UTF-8"><title>SSO Daily Security Report</title></head>
+<body style="font-family:sans-serif;max-width:720px">
+  <h2 style="color:#002147">SSO Daily Security Report</h2>
+  <p style="color:#555"><span th:text="${periodStartDate}"></span> — <span th:text="${periodEndDate}"></span></p>
+
+  <table style="border-collapse:collapse;margin-bottom:16px">
+    <tr>
+      <td style="padding:8px 16px;background:#f4f4f4"><strong style="font-size:24px" th:text="${report.total}">0</strong><br><span style="color:#555">Total Alerts</span></td>
+      <td style="padding:8px 16px;background:#fff0f0"><strong style="font-size:24px;color:#cc0000" th:text="${report.critical}">0</strong><br><span style="color:#555">Critical</span></td>
+      <td style="padding:8px 16px;background:#fff8e0"><strong style="font-size:24px;color:#e07000" th:text="${report.warning}">0</strong><br><span style="color:#555">Warning</span></td>
+      <td style="padding:8px 16px;background:#f0fff0"><strong style="font-size:24px;color:#008800" th:text="${report.acknowledged}">0</strong><br><span style="color:#555">Acknowledged</span></td>
+    </tr>
+  </table>
+
+  <h3>By Rule</h3>
+  <table border="1" cellspacing="0" style="border-collapse:collapse;width:100%;margin-bottom:16px">
+    <tr style="background:#002147;color:white"><th style="padding:6px 8px;text-align:left">Rule</th><th style="padding:6px 8px">Count</th></tr>
+    <tr th:each="r : ${byRule}">
+      <td style="padding:4px 8px" th:text="${r.title}">Rule</td>
+      <td style="padding:4px 8px;text-align:center" th:text="${r.count}">0</td>
+    </tr>
+  </table>
+
+  <h3>Alert Detail (latest 50)</h3>
+  <table border="1" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:13px">
+    <tr style="background:#002147;color:white">
+      <th style="padding:6px 8px">Time</th><th style="padding:6px 8px">Severity</th><th style="padding:6px 8px">Rule</th>
+      <th style="padding:6px 8px">User</th><th style="padding:6px 8px">Acked</th>
+    </tr>
+    <tr th:each="a : ${rows}">
+      <td style="padding:4px 8px" th:text="${a.time}"></td>
+      <td style="padding:4px 8px"><span th:style="'font-weight:bold;color:' + ${a.color}" th:text="${a.severity}"></span></td>
+      <td style="padding:4px 8px" th:text="${a.rule}"></td>
+      <td style="padding:4px 8px" th:text="${a.user}"></td>
+      <td style="padding:4px 8px" th:text="${a.acked} ? '✓' : ''"></td>
+    </tr>
+  </table>
+  <p th:if="${report.total > 50}" style="color:#888">... and <span th:text="${report.total - 50}"></span> more</p>
+
+  <p style="color:#888;font-size:12px;margin-top:24px">
+    Government of Rwanda SSO — automated daily security report<br>
+    Do not reply to this message.
+  </p>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "_comment": "Template for the NIDA / eID OIDC identity-provider broker. Merge this into a realm's `identityProviders` array (e.g. government-citizens-realm.json) once the integration contract is signed with NIDA. Fill in the four placeholders: NIDA_AUTHORIZATION_URL, NIDA_TOKEN_URL, NIDA_USERINFO_URL, NIDA_CLIENT_ID/SECRET. Set `enabled` to true to activate.",
+  "alias": "nida-eid",
+  "displayName": "Sign in with NIDA",
+  "providerId": "oidc",
+  "enabled": false,
+  "updateProfileFirstLoginMode": "on",
+  "trustEmail": false,
+  "storeToken": false,
+  "addReadTokenRoleOnCreate": false,
+  "authenticateByDefault": false,
+  "linkOnly": false,
+  "firstBrokerLoginFlowAlias": "first broker login",
+  "config": {
+    "authorizationUrl": "REPLACE_WITH_NIDA_AUTHORIZATION_URL",
+    "tokenUrl": "REPLACE_WITH_NIDA_TOKEN_URL",
+    "userInfoUrl": "REPLACE_WITH_NIDA_USERINFO_URL",
+    "clientId": "REPLACE_WITH_NIDA_CLIENT_ID",
+    "clientSecret": "REPLACE_WITH_NIDA_CLIENT_SECRET",
+    "defaultScope": "openid profile",
+    "clientAuthMethod": "client_secret_post",
+    "syncMode": "FORCE",
+    "validateSignature": "true",
+    "useJwksUrl": "true",
+    "jwksUrl": "REPLACE_WITH_NIDA_JWKS_URL",
+    "issuer": "REPLACE_WITH_NIDA_ISSUER"
+  }
+}

@@ -1,0 +1,30 @@
+# Required cross-institution isolation scenario classes (SPEC §7.1).
+#
+# The CI `isolation` job runs `mvn -Pit -f sso-wrapper/pom.xml test -Dtest='*Isolation*'`
+# and then ci/check-isolation-reports.sh, which FAILS when any class below is
+# missing from the surefire reports or ran 0 tests. A gate that silently stops
+# testing anything is worse than no gate: it reports green forever.
+#
+# Teammates: name your classes EXACTLY as listed (package
+# rw.gov.risa.sso.wrapper.isolation), or edit this list in the same merge request
+# that renames/moves them. @Nested inner classes count towards their outer class.
+# Ported from the reference scenario list (tests/e2e/test_institution_isolation.py).
+rw.gov.risa.sso.wrapper.isolation.MembershipFilterIsolationTest
+rw.gov.risa.sso.wrapper.isolation.CannotReadAcrossInstitutionsIsolationTest
+rw.gov.risa.sso.wrapper.isolation.CannotModifyAcrossInstitutionsIsolationTest
+rw.gov.risa.sso.wrapper.isolation.ListAndSearchAreScopedIsolationTest
+rw.gov.risa.sso.wrapper.isolation.RoleScopingIsolationTest
+rw.gov.risa.sso.wrapper.isolation.BroadRoleGrantIsBlockedIsolationTest
+rw.gov.risa.sso.wrapper.isolation.ClientScopingIsolationTest
+rw.gov.risa.sso.wrapper.isolation.CrossCuttingClientScopeIsolationTest
+rw.gov.risa.sso.wrapper.isolation.JoinColumnScopingIsolationTest
+rw.gov.risa.sso.wrapper.isolation.ClientScopeIsPrefixBasedAndTheRegistryCompensatesIsolationTest
+rw.gov.risa.sso.wrapper.isolation.RouteLevelIsolationTest
+rw.gov.risa.sso.wrapper.isolation.ShippedConfigCannotReachAnotherInstitutionIsolationTest
+rw.gov.risa.sso.wrapper.isolation.EmployeeDirectoryScopingIsolationTest
+# The Keycloak-side half of the boundary (FGAP v2, caller's own token, Keycloak 26.2 Testcontainer).
+rw.gov.risa.sso.wrapper.isolation.FgapKeycloakDirectIsolationTest
+rw.gov.risa.sso.wrapper.isolation.AccessRevocationIsolationTest
+rw.gov.risa.sso.wrapper.isolation.DelegationFailClosedIsolationTest
+rw.gov.risa.sso.wrapper.isolation.AccessMatrixIsolationTest
+rw.gov.risa.sso.wrapper.isolation.ProvisioningIsolationTest

@@ -1,0 +1,18 @@
+# Ministry of Health — app `hmis` (configs/institutions.yaml),
+# client roles viewer | clinician | records-admin.
+server:
+  port: ${PORT:8082}
+
+gorsso:
+  client-id: ${GORSSO_CLIENT_ID:minisante-hmis}
+  institution:
+    slug: minisante
+  join-key:
+    column: ${GORSSO_JOIN_COLUMN:email}
+
+sample:
+  display-name: Ministry of Health
+  records:
+    - { id: "FAC-0012", title: "Kibagabaga District Hospital", kind: facility }
+    - { id: "RPT-2026-09", title: "Monthly HMIS report — September", kind: report }
+    - { id: "CHW-0450", title: "Community health worker roster — Rubavu", kind: roster }

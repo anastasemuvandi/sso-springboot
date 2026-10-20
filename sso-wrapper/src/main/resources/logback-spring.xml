@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- JSON logs with the correlation id (MDC correlationId) by default; SPRING_PROFILES_ACTIVE=plainlog for local reading. -->
+<configuration>
+  <springProperty scope="context" name="APP" source="spring.application.name" defaultValue="app"/>
+
+  <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <customFields>{"service":"${APP}"}</customFields>
+      <includeMdcKeyName>correlationId</includeMdcKeyName>
+    </encoder>
+  </appender>
+
+  <appender name="PLAIN" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %-5level [%X{correlationId:-}] %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <springProfile name="plainlog">
+    <root level="INFO"><appender-ref ref="PLAIN"/></root>
+  </springProfile>
+  <springProfile name="!plainlog">
+    <root level="INFO"><appender-ref ref="JSON"/></root>
+  </springProfile>
+</configuration>

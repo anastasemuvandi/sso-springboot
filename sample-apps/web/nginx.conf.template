@@ -1,0 +1,28 @@
+# Rendered by the nginx image's envsubst entrypoint: ${API_UPSTREAM} → e.g. http://sample-api-minagri:8080
+server {
+  listen 8080;
+  server_name _;
+  root /usr/share/nginx/html;
+
+  add_header X-Content-Type-Options nosniff always;
+  add_header Referrer-Policy no-referrer always;
+  add_header X-Frame-Options DENY always;
+
+  location /api/ {
+    proxy_pass ${API_UPSTREAM};
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location /assets/ {
+    add_header Cache-Control "public, max-age=31536000, immutable";
+    try_files $uri =404;
+  }
+
+  # SPA routes (/, /callback, /me, /records) → index.html, never cached.
+  location / {
+    add_header Cache-Control "no-store" always;
+    try_files $uri /index.html;
+  }
+}

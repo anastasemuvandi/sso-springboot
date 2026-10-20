@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "source": "Mirror of infra/terraform/mfa.tf (and the reference scripts/kc26_enable_mfa.py). Change both; MfaFlowTerraformConsistencyTest fails otherwise.",
+  "flow": {
+    "alias": "browser-totp",
+    "provider_id": "basic-flow",
+    "top_level": true,
+    "built_in": false,
+    "description": "Browser flow with TOTP by realm mode and per-client requirement. Managed by GoRSSO (mirror of infra/terraform/mfa.tf)."
+  },
+  "bind_as": "browserFlow",
+  "loa_max_age_seconds": 36000,
+  "realm_settings": {
+    "otpPolicyType": "totp",
+    "otpPolicyAlgorithm": "HmacSHA1",
+    "otpPolicyDigits": 6,
+    "otpPolicyPeriod": 30,
+    "otpPolicyLookAheadWindow": 1,
+    "bruteForceProtected": true,
+    "failureFactor": 5,
+    "waitIncrementSeconds": 900,
+    "maxFailureWaitSeconds": 900
+  },
+  "realm_attributes": {
+    "acr.loa.map": "{\"1\":1,\"2\":2}"
+  },
+  "initial_mode_if_unset": "off",
+  "exempt_role": {
+    "name": "mfa-exempt",
+    "description": "Exempt from the realm-wide TOTP requirement. Super admins only, through the wrapper, which records the justification in the user attribute mfa_exempt_reason."
+  },
+  "required_actions": [
+    { "alias": "CONFIGURE_TOTP", "name": "Configure OTP", "enabled": true, "default_action": false, "priority": 10 },
+    { "alias": "CONFIGURE_RECOVERY_AUTHN_CODES", "name": "Recovery Authentication Codes", "enabled": true, "default_action": false, "priority": 20 }
+  ],
+  "events": {
+    "listener": "gorsso-audit",
+    "enabled_event_types": ["UPDATE_TOTP", "REMOVE_TOTP", "UPDATE_CREDENTIAL", "UPDATE_CREDENTIAL_ERROR", "REMOVE_CREDENTIAL", "LOGIN", "LOGIN_ERROR"]
+  },
+  "required_server_providers": {
+    "authenticator": ["gorsso-mfa-step-up", "gorsso-condition-realm-attribute", "gorsso-condition-credential", "gorsso-recovery-reenrol", "auth-recovery-authn-code-form"],
+    "eventsListener": ["gorsso-audit"],
+    "required-action": ["CONFIGURE_RECOVERY_AUTHN_CODES"]
+  },
+  "executions": [
+    { "index": 0,  "level": 0, "parent": "browser-totp", "kind": "execution", "provider_id": "gorsso-mfa-step-up", "requirement": "REQUIRED", "priority": 5, "tf_resource": "step_up" },
+    { "index": 1,  "level": 0, "parent": "browser-totp", "kind": "flow", "alias": "browser-totp main", "flow_provider_id": "basic-flow", "requirement": "REQUIRED", "priority": 10, "tf_resource": "main" },
+    { "index": 2,  "level": 1, "parent": "browser-totp main", "kind": "execution", "provider_id": "auth-cookie", "requirement": "ALTERNATIVE", "priority": 10, "tf_resource": "cookie" },
+    { "index": 3,  "level": 1, "parent": "browser-totp main", "kind": "execution", "provider_id": "auth-spnego", "requirement": "DISABLED", "priority": 20, "tf_resource": "kerberos" },
+    { "index": 4,  "level": 1, "parent": "browser-totp main", "kind": "execution", "provider_id": "identity-provider-redirector", "requirement": "ALTERNATIVE", "priority": 25, "tf_resource": "idp_redirector" },
+    { "index": 5,  "level": 1, "parent": "browser-totp main", "kind": "flow", "alias": "browser-totp Organization", "flow_provider_id": "basic-flow", "requirement": "ALTERNATIVE", "priority": 26, "optional": "organization_login", "tf_resource": "organization" },
+    { "index": 6,  "level": 2, "parent": "browser-totp Organization", "kind": "flow", "alias": "browser-totp Conditional Organization", "flow_provider_id": "basic-flow", "requirement": "CONDITIONAL", "priority": 10, "optional": "organization_login", "tf_resource": "organization_conditional" },
+    { "index": 7,  "level": 3, "parent": "browser-totp Conditional Organization", "kind": "execution", "provider_id": "conditional-user-configured", "requirement": "REQUIRED", "priority": 10, "optional": "organization_login", "tf_resource": "organization_user_configured" },
+    { "index": 8,  "level": 3, "parent": "browser-totp Conditional Organization", "kind": "execution", "provider_id": "organization", "requirement": "ALTERNATIVE", "priority": 20, "optional": "organization_login", "tf_resource": "organization_identity_first" },
+    { "index": 9,  "level": 1, "parent": "browser-totp main", "kind": "flow", "alias": "browser-totp forms", "flow_provider_id": "basic-flow", "requirement": "ALTERNATIVE", "priority": 30, "tf_resource": "forms" },
+    { "index": 10, "level": 2, "parent": "browser-totp forms", "kind": "flow", "alias": "browser-totp password", "flow_provider_id": "basic-flow", "requirement": "CONDITIONAL", "priority": 10, "tf_resource": "password" },
+    { "index": 11, "level": 3, "parent": "browser-totp password", "kind": "execution", "provider_id": "conditional-level-of-authentication", "requirement": "REQUIRED", "priority": 10, "tf_resource": "loa1",
+      "config": { "alias": "browser-totp-loa1", "values": { "loa-condition-level": "1", "loa-max-age": "36000" } } },
+    { "index": 12, "level": 3, "parent": "browser-totp password", "kind": "execution", "provider_id": "auth-username-password-form", "requirement": "REQUIRED", "priority": 20, "tf_resource": "username_password" },
+    { "index": 13, "level": 2, "parent": "browser-totp forms", "kind": "flow", "alias": "browser-totp 2FA", "flow_provider_id": "basic-flow", "requirement": "CONDITIONAL", "priority": 20, "tf_resource": "two_factor" },
+    { "index": 14, "level": 3, "parent": "browser-totp 2FA", "kind": "execution", "provider_id": "conditional-user-role", "requirement": "REQUIRED", "priority": 10, "tf_resource": "not_exempt",
+      "config": { "alias": "browser-totp-not-exempt", "values": { "condUserRole": "mfa-exempt", "negate": "true" } } },
+    { "index": 15, "level": 3, "parent": "browser-totp 2FA", "kind": "execution", "provider_id": "gorsso-condition-realm-attribute", "requirement": "REQUIRED", "priority": 20, "tf_resource": "switch",
+      "config": { "alias": "browser-totp-switch", "values": { "attribute": "mfa_totp_enforced", "expected": "true", "when_unset": "true", "loa": "2" } } },
+    { "index": 16, "level": 3, "parent": "browser-totp 2FA", "kind": "execution", "provider_id": "conditional-level-of-authentication", "requirement": "DISABLED", "priority": 30, "tf_resource": "loa2_declaration",
+      "config": { "alias": "browser-totp-loa2", "values": { "loa-condition-level": "2", "loa-max-age": "36000" } } },
+    { "index": 17, "level": 3, "parent": "browser-totp 2FA", "kind": "flow", "alias": "browser-totp enrol", "flow_provider_id": "basic-flow", "requirement": "CONDITIONAL", "priority": 40, "tf_resource": "enrol" },
+    { "index": 18, "level": 4, "parent": "browser-totp enrol", "kind": "execution", "provider_id": "gorsso-condition-credential", "requirement": "REQUIRED", "priority": 10, "tf_resource": "enrol_no_otp",
+      "config": { "alias": "browser-totp-no-otp", "values": { "credential_type": "otp", "present": "false" } } },
+    { "index": 19, "level": 4, "parent": "browser-totp enrol", "kind": "execution", "provider_id": "auth-otp-form", "requirement": "REQUIRED", "priority": 20, "tf_resource": "enrol_otp_form" },
+    { "index": 20, "level": 4, "parent": "browser-totp enrol", "kind": "flow", "alias": "browser-totp enrol recovery codes", "flow_provider_id": "basic-flow", "requirement": "CONDITIONAL", "priority": 30, "tf_resource": "enrol_recovery" },
+    { "index": 21, "level": 5, "parent": "browser-totp enrol recovery codes", "kind": "execution", "provider_id": "gorsso-condition-credential", "requirement": "REQUIRED", "priority": 10, "tf_resource": "enrol_no_recovery_codes",
+      "config": { "alias": "browser-totp-no-recovery-codes", "values": { "credential_type": "recovery-authn-codes", "present": "false" } } },
+    { "index": 22, "level": 5, "parent": "browser-totp enrol recovery codes", "kind": "execution", "provider_id": "auth-recovery-authn-code-form", "requirement": "REQUIRED", "priority": 20, "tf_resource": "enrol_recovery_form" },
+    { "index": 23, "level": 3, "parent": "browser-totp 2FA", "kind": "flow", "alias": "browser-totp verify", "flow_provider_id": "basic-flow", "requirement": "CONDITIONAL", "priority": 50, "tf_resource": "verify" },
+    { "index": 24, "level": 4, "parent": "browser-totp verify", "kind": "execution", "provider_id": "gorsso-condition-credential", "requirement": "REQUIRED", "priority": 10, "tf_resource": "verify_has_otp",
+      "config": { "alias": "browser-totp-has-otp", "values": { "credential_type": "otp", "present": "true" } } },
+    { "index": 25, "level": 4, "parent": "browser-totp verify", "kind": "flow", "alias": "browser-totp 2FA methods", "flow_provider_id": "basic-flow", "requirement": "REQUIRED", "priority": 20, "tf_resource": "methods" },
+    { "index": 26, "level": 5, "parent": "browser-totp 2FA methods", "kind": "execution", "provider_id": "auth-otp-form", "requirement": "ALTERNATIVE", "priority": 10, "tf_resource": "otp_form" },
+    { "index": 27, "level": 5, "parent": "browser-totp 2FA methods", "kind": "flow", "alias": "browser-totp recovery", "flow_provider_id": "basic-flow", "requirement": "ALTERNATIVE", "priority": 20, "tf_resource": "recovery" },
+    { "index": 28, "level": 6, "parent": "browser-totp recovery", "kind": "execution", "provider_id": "auth-recovery-authn-code-form", "requirement": "REQUIRED", "priority": 10, "tf_resource": "recovery_code_form" },
+    { "index": 29, "level": 6, "parent": "browser-totp recovery", "kind": "execution", "provider_id": "gorsso-recovery-reenrol", "requirement": "REQUIRED", "priority": 20, "tf_resource": "recovery_reenrol" }
+  ]
+}

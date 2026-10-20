@@ -1,0 +1,28 @@
+{
+  "name": "gorsso-keycloak-theme",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Government of Rwanda SSO login + email theme (Keycloakify) for Keycloak 26.2",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "build-keycloak-theme": "npm run build && keycloakify build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "keycloakify": "11.16.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "~5.6.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  }
+}

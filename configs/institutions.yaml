@@ -1,0 +1,158 @@
+# =============================================================================
+# Institution registry — the authoritative list of institutions on GoR SSO.
+# ADR-0001 §5.4.
+# =============================================================================
+#
+# This file is the SOURCE OF TRUTH for *which institutions exist*. It is read by
+# the onboarding IaC (`infra/terraform`), which turns each active entry into the
+# Keycloak objects ADR-0001 §3/§4/§5.3 requires:
+#
+#   slug            -> top-level group  /<slug>  in `government-internal`
+#                   -> realm-role namespace  inst:<slug>:*
+#                   -> client-id prefix       <slug>-<app>
+#                   -> the `institution` attribute/claim on every member
+#
+# WHAT AN ENTRY MAY *NOT* DECIDE
+#   It does not decide what a local admin may DO — that comes from
+#   `configs/delegated-permissions/templates.json`, which the same IaC reads to
+#   derive the `inst:<slug>:*` roles for each tier. Keep the two files separate:
+#   this one is a list of tenants, that one is a policy.
+#
+# CHANGING THIS FILE
+#   Adding an entry onboards an institution; see the runbook at
+#   `docs/runbooks/onboard-institution.md`. Never hand-create the group, roles or
+#   clients in the Keycloak admin console — Terraform would not own them and
+#   `make delegated-check` reports them as unmanaged.
+#
+#   A slug is PERMANENT (ADR-0001 §5.1 rule 3): it is baked into live tokens,
+#   group paths, role names and client-ids. Renames change `display_name` only.
+#
+#   A slug may also not EXTEND an existing slug (`local` taken => `local-govt`
+#   refused). Client scoping is a glob on `<slug>-*` and '-' is legal inside a
+#   slug, so `local-govt-portal` matches `local-*` and the shorter institution
+#   would reach the longer one's apps. Role and member scoping are immune ( ':'
+#   and '/' cannot occur in a slug); the client separator is the odd one out, so
+#   the collision is forbidden here instead. Enforced by
+#   scripts/validate_institution_registry.py and by a Terraform precondition.
+#   Retiring an institution means `status: decommissioned`, NOT deleting the
+#   entry — see the runbook's offboarding section for why deletion is unsafe.
+#
+# FIELDS
+#   slug            required. Canonical, permanent, lowercase `[a-z0-9-]`.
+#   display_name    required. Human name; the only field a rename may touch.
+#   ippis_codes     upstream IPPIS `institution` values that map to this slug.
+#                   Many-to-one is allowed; a code may map to only ONE slug.
+#   status          active | suspended | decommissioned. Only `active` is
+#                   provisioned by the IaC.
+#   realm           defaults to `government-internal`. Anything else is a §6
+#                   exception and is skipped by the default root module.
+#   separate_realm  §6 legal exception flag. Default false. Requires a signed
+#                   exception record and a `justification`.
+#   departments     optional subgroups (`/<slug>/<department>`), ADR-0001 §3.
+#   apps            optional client apps. `name` is the app part of the
+#                   slug-prefixed client-id (`<slug>-<name>`, ADR-0001 §5.3).
+#
+# APP FIELDS
+#   name                 required. Client-id becomes `<slug>-<name>`.
+#   display_name         optional friendly name shown in the Keycloak console.
+#   roles                client roles to create on that client.
+#   redirect_uris        environment-INDEPENDENT redirect URIs only. Per-env
+#                        additions (localhost in dev, the staging host) come
+#                        from `extra_redirect_uris` in the env tfvars — do not
+#                        put `http://localhost:*` here.
+#   web_origins          CORS origins; `+` means "the valid redirect URIs".
+#   root_url             optional root URL.
+#   public               true for browser/native clients with no secret.
+#                        Public clients cannot carry an access policy, so they
+#                        are exempt from per-client enforcement.
+#   direct_access_grants password grant. Leave false outside dev.
+#   service_accounts     client-credentials flow for machine-to-machine calls.
+#   enforce_access       default true: create the `sso-access-groups` policy
+#                        admitting this institution's group, so the client is
+#                        usable under ACCESS_DEFAULT_DENY. Set false only for a
+#                        client whose audience is deliberately wider than the
+#                        owning institution (it will then be locked out until
+#                        someone assigns access via /authorization).
+# =============================================================================
+
+version: 1
+
+institutions:
+  # ---------------------------------------------------------------------------
+  # Seeded development institutions (scripts/seed_institutions_dev.py)
+  # ---------------------------------------------------------------------------
+  - slug: minagri
+    display_name: Ministry of Agriculture and Animal Resources
+    ippis_codes: [MINAGRI]
+    status: active
+    departments: [planning, extension]
+    apps:
+      - name: kubaka-web
+        display_name: Kubaka
+        roles: [viewer, editor, approver]
+
+  - slug: minisante
+    display_name: Ministry of Health
+    ippis_codes: [MINISANTE]
+    status: active
+    apps:
+      - name: hmis
+        display_name: Health Management Information System
+        roles: [viewer, clinician, records-admin]
+
+  - slug: mineduc
+    display_name: Ministry of Education
+    ippis_codes: [MINEDUC]
+    status: active
+    apps:
+      - name: emis
+        display_name: Education Management Information System
+        roles: [viewer, editor]
+
+  # ---------------------------------------------------------------------------
+  # Institutions that already exist as (UPPERCASE, pre-ADR) realm groups. Listed
+  # here under their canonical lowercase slug so the IaC becomes the owner; see
+  # the runbook's "adopting a pre-existing institution" section before applying
+  # these to an environment that was seeded by hand.
+  # ---------------------------------------------------------------------------
+  - slug: mininfra
+    display_name: Ministry of Infrastructure
+    ippis_codes: [MININFRA]
+    status: active
+
+  - slug: mifotra
+    display_name: Ministry of Public Service and Labour
+    ippis_codes: [MIFOTRA]
+    status: active
+    apps:
+      - name: ippis-portal
+        display_name: IPPIS Portal
+        roles: [viewer, hr-officer]
+
+  - slug: rdb
+    display_name: Rwanda Development Board
+    ippis_codes: [RDB]
+    status: active
+    apps:
+      - name: portal
+        display_name: RDB Portal
+        roles: [viewer]
+
+  - slug: rra
+    display_name: Rwanda Revenue Authority
+    ippis_codes: [RRA]
+    status: active
+    apps:
+      - name: myrra
+        display_name: MyRRA
+        roles: [viewer]
+
+  - slug: minijust
+    display_name: Ministry of Justice
+    ippis_codes: [MINIJUST]
+    status: active
+
+  - slug: mineacom
+    display_name: Ministry of Trade and Industry
+    ippis_codes: [MINEACOM]
+    status: active

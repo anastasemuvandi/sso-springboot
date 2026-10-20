@@ -1,0 +1,106 @@
+# ---------------------------------------------------------------------------
+# GoRSSO base: Keycloak 26.2 (built from keycloak/Dockerfile) + Postgres 16.
+#
+#   dev:     docker compose -p gorsso -f deploy/docker-compose.base.yml \
+#                           -f deploy/docker-compose.apps.yml up -d --build      (make start)
+#   staging: ... -f deploy/docker-compose.staging.yml        prod: ... -f deploy/docker-compose.prod.yml
+#   down:    docker compose -p gorsso -f deploy/docker-compose.base.yml \
+#                           -f deploy/docker-compose.apps.yml down -v            (make clean)
+#
+# Paths in these files are relative to deploy/ (the first -f file's directory), so `..` is the
+# repository root. Every published host port is an env var (HOST_PORT_*) with the reference's
+# number as default, so a second stack can run next to the first; see deploy/.env.example.
+#
+# DEV MODE. Keycloak runs `start-dev --import-realm` here, so the build options below
+# (KC_DB, KC_FEATURES, KC_HEALTH_ENABLED, KC_METRICS_ENABLED) are legal at runtime and the realm
+# JSONs are bind-mounted from configs/realms (edit, `make clean && make start`). The staging/prod
+# overlays REPLACE this service's environment (`!override`) and fall back to the image's
+# `start --optimized --import-realm`, which refuses those build options.
+#
+# Health and metrics are on the management port 9000 (not published), not on 8080.
+# ---------------------------------------------------------------------------
+
+name: gorsso
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gorsso}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gorsso-dev}
+      POSTGRES_DB: ${POSTGRES_DB:-gorsso}
+      # Read by initdb/10-databases.sh on the FIRST start of an empty volume only.
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:-keycloak-dev}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:-sso-identity-dev}
+      AUDIT_DB_PASSWORD: ${AUDIT_DB_PASSWORD:-audit-dev}
+      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:-notification-dev}
+    ports:
+      - "${HOST_BIND:-127.0.0.1}:${HOST_PORT_POSTGRES:-5435}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gorsso} -d ${POSTGRES_DB:-gorsso}"]
+      interval: 10s
+      timeout: 3s
+      start_period: 120s
+      retries: 5
+
+  keycloak:
+    build:
+      context: ..
+      dockerfile: keycloak/Dockerfile
+      args:
+        SKIP_TESTS: "true"
+    image: ${REGISTRY:-gorsso}/keycloak:${TAG:-dev}
+    restart: unless-stopped
+    # The image's ENTRYPOINT is `kc.sh start --optimized --import-realm`; dev runs start-dev.
+    entrypoint: ["/opt/keycloak/bin/kc.sh"]
+    command: ["start-dev", "--import-realm"]
+    # A capped container + JAVA_OPTS_KC_HEAP is what keeps the JVM from claiming 70% of the host.
+    mem_limit: ${KC_MEM_LIMIT:-1500m}
+    environment:
+      JAVA_OPTS_KC_HEAP: ${KC_JAVA_OPTS_KC_HEAP:--XX:MaxRAMPercentage=70 -XX:MinRAMPercentage=70 -XX:InitialRAMPercentage=25}
+      # Build options: legal here only because this is start-dev (see the header).
+      KC_DB: postgres
+      KC_FEATURES: organization,admin-fine-grained-authz:v2,recovery-codes
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      # Runtime options.
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:-keycloak-dev}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
+      KC_HTTP_ENABLED: "true"
+      # Hostname v2: the FULL browser-facing URL. Pins the token `iss`, whichever name a request
+      # used; without it the wrapper's caller-token calls to http://keycloak:8080 get a bare 401.
+      KC_HOSTNAME: ${PUBLIC_KEYCLOAK_URL:-http://localhost:${HOST_PORT_KEYCLOAK:-8080}}
+      # Server-to-server calls (wrapper, seeder, audit worker) reach http://keycloak:8080.
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      # X-Forwarded-* from a proxy in front (none in dev; harmless without one).
+      KC_PROXY_HEADERS: xforwarded
+      # gorsso-audit event listener (in the image; active once a realm lists it).
+      KC_SPI_EVENTS_LISTENER_GORSSO_AUDIT_URL: http://audit-service:8001
+      KC_SPI_EVENTS_LISTENER_GORSSO_AUDIT_API_KEY: ${AUDIT_API_KEY:-gorsso-dev-audit-key}
+      # Keycloakify theme: the "Didn't get the email?" link on the sign-in page.
+      GORSSO_ACCOUNT_SETUP_URL: ${PUBLIC_WRAPPER_URL:-http://localhost:${HOST_PORT_WRAPPER:-8000}}/account/setup-link
+    volumes:
+      - ../configs/realms:/opt/keycloak/data/import:ro
+    ports:
+      - "${HOST_PORT_KEYCLOAK:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # Management port 9000; the image has no curl.
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q ' 200'"]
+      interval: 15s
+      timeout: 5s
+      start_period: 120s
+      retries: 12
+
+volumes:
+  postgres_data:

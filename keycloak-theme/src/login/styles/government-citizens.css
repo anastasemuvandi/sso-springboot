@@ -1,0 +1,828 @@
+/* ------------------------------------------------------------------
+ * Government of Rwanda — SSO sign-in theme
+ * Split-screen layout: left = form panel, right = brand panel.
+ * Matches the admin portal's sky-blue identity.
+ * ------------------------------------------------------------------ */
+
+:root {
+  --rw-blue: #00a1de;
+  --rw-yellow: #fad201;
+  --rw-green: #20603d;
+
+  --primary: #1e88e5;
+  --primary-hover: #1976d2;
+  --primary-soft: #dbeafe;
+
+  --brand-from: #1d72d3;
+  --brand-to:   #0a4691;
+
+  --page: #e5e7eb;
+  --surface: #ffffff;
+  --form-bg: #fafafb;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --destructive: #b91c1c;
+  --destructive-bg: #fef2f2;
+  --success: #166534;
+  --success-bg: #f0fdf4;
+
+  --radius-card: 18px;
+  --radius-field: 8px;
+  --shadow-card:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 32px -16px rgba(15, 23, 42, 0.18);
+}
+
+/* ------------------------------------------------------------------ */
+/* Reset / base                                                       */
+/* ------------------------------------------------------------------ */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body, .login-pf body, .gor-body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+               Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--foreground);
+  background: var(--page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Strip the legacy Keycloak page-level header that lived outside the
+   card; our template renders its own brand mark inside .gor-form-card. */
+#kc-header { display: none !important; }
+
+/* PatternFly's .login-pf-page wrapper paints a blue background and
+   centers content — we override layout via .gor-split so flatten it. */
+.login-pf-page {
+  background: transparent !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Split layout                                                        */
+/* ------------------------------------------------------------------ */
+
+.gor-split {
+  min-height: 100vh;
+  padding: 28px;
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) minmax(420px, 1fr);
+  gap: 0;
+}
+
+.gor-split__form,
+.gor-split__brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-card);
+}
+
+.gor-split__form {
+  background: var(--form-bg);
+  padding: 56px 64px 32px;
+  align-items: center;
+  justify-content: center;
+}
+
+.gor-split__brand {
+  background: radial-gradient(120% 80% at 15% 20%, #2a83de 0%, var(--brand-from) 35%, var(--brand-to) 100%);
+  color: #fff;
+  overflow: hidden;
+  margin-left: 12px;
+}
+
+/* Subtle dot grid overlay on the brand panel — feels more "Stripe-y"
+   than a bare gradient without screaming for attention. */
+.gor-split__brand::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 0 0;
+  mask-image: linear-gradient(135deg, rgba(0,0,0,0.9), transparent 70%);
+  -webkit-mask-image: linear-gradient(135deg, rgba(0,0,0,0.9), transparent 70%);
+  pointer-events: none;
+}
+/* Bottom-right soft highlight to add depth */
+.gor-split__brand::after {
+  content: "";
+  position: absolute;
+  right: -80px; bottom: -120px;
+  width: 480px; height: 480px;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.10), transparent 70%);
+  pointer-events: none;
+}
+
+/* Collapse to single column on tablets/phones */
+@media (max-width: 980px) {
+  .gor-split {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  .gor-split__brand { display: none; }
+  .gor-split__form {
+    padding: 40px 24px;
+    background: var(--surface);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Locale picker (top-right of the form panel)                         */
+/* ------------------------------------------------------------------ */
+
+.gor-locale {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  font-size: 13px;
+}
+
+#kc-locale-wrapper { position: static; }
+
+#kc-locale-dropdown {
+  position: relative;
+}
+
+#kc-locale-dropdown #kc-current-locale-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--foreground);
+  text-decoration: none;
+  line-height: 1.2;
+}
+
+#kc-locale-dropdown #kc-current-locale-link::after {
+  content: "▾";
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+#kc-locale-dropdown #kc-current-locale-link:hover { background: #f3f4f6; }
+
+#kc-locale-dropdown ul {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 140px;
+  list-style: none;
+  padding: 4px;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  z-index: 10;
+  display: none;
+}
+
+#kc-locale-dropdown:hover ul,
+#kc-locale-dropdown:focus-within ul,
+#kc-locale-dropdown.active ul { display: block; }
+
+#kc-locale-dropdown ul a {
+  display: block;
+  padding: 6px 10px;
+  border-radius: 4px;
+  color: var(--foreground);
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 13px;
+}
+#kc-locale-dropdown ul a:hover { background: #f1f5f9; }
+
+/* ------------------------------------------------------------------ */
+/* Form card (inside the left panel)                                   */
+/* ------------------------------------------------------------------ */
+
+.gor-form-card {
+  width: 100%;
+  max-width: 400px;
+  animation: gor-fade-in 0.45s cubic-bezier(0.2, 0, 0, 1) both;
+}
+@keyframes gor-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.gor-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 56px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.gor-brand__mark {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  display: block;
+}
+
+.gor-brand__wordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.gor-brand__line1 {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--foreground);
+  letter-spacing: -0.005em;
+}
+.gor-brand__line2 {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.gor-form-card__head {
+  margin-bottom: 28px;
+}
+
+#kc-page-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+  line-height: 1.15;
+}
+
+.gor-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+/* "You're attempting as X" prompt from Keycloak (after a username step). */
+.gor-username-context {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gor-username-context label { font-weight: 500; color: var(--foreground); }
+.gor-username-context a { color: var(--primary); text-decoration: none; }
+.gor-username-context a:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------------ */
+/* Alerts                                                              */
+/* ------------------------------------------------------------------ */
+
+.gor-alert,
+.alert,
+.alert-error,
+.kc-feedback-text {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  border: 1px solid transparent;
+}
+
+.gor-alert--error,
+.alert-error,
+.pf-m-danger {
+  background: var(--destructive-bg);
+  border-color: #fecaca;
+  color: var(--destructive);
+}
+
+.gor-alert--success,
+.alert-success,
+.pf-m-success {
+  background: var(--success-bg);
+  border-color: #bbf7d0;
+  color: var(--success);
+}
+
+.gor-alert--warning,
+.alert-warning,
+.pf-m-warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.gor-alert--info,
+.alert-info,
+.pf-m-info {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.kc-feedback-text,
+.pf-c-form__helper-text {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--destructive);
+}
+
+/* ------------------------------------------------------------------ */
+/* Form fields                                                         */
+/* ------------------------------------------------------------------ */
+
+.form-group { margin-bottom: 18px; }
+
+label,
+.control-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+
+.form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"] {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-field);
+  font-size: 14px;
+  color: var(--foreground);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.form-control::placeholder { color: #94a3b8; }
+
+.form-control:hover,
+input[type="text"]:hover,
+input[type="email"]:hover,
+input[type="password"]:hover,
+input[type="number"]:hover {
+  border-color: var(--muted);
+}
+
+.form-control:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.18),
+              0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+/* Invalid state.
+ *
+ * Stock PatternFly (which Keycloak's base login.css extends) paints a
+ * tiled exclamation-icon background on `[aria-invalid="true"]` fields
+ * after a failed sign-in attempt — the noisy red diamonds we don't want.
+ * Replace the icon wash with a clean red border + soft ring that matches
+ * the rest of our form chrome. */
+.form-control[aria-invalid="true"],
+input[type="text"][aria-invalid="true"],
+input[type="email"][aria-invalid="true"],
+input[type="password"][aria-invalid="true"],
+input[type="number"][aria-invalid="true"] {
+  background-image: none !important;
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.12),
+              0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.form-control[aria-invalid="true"]:focus,
+input[type="text"][aria-invalid="true"]:focus,
+input[type="email"][aria-invalid="true"]:focus,
+input[type="password"][aria-invalid="true"]:focus,
+input[type="number"][aria-invalid="true"]:focus {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.22),
+              0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+/* Show / hide password eye */
+.pf-c-input-group { display: flex; gap: 6px; align-items: stretch; }
+.pf-c-input-group button {
+  height: 42px;
+  width: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-field);
+  background: var(--surface);
+  cursor: pointer;
+  color: var(--muted);
+}
+.pf-c-input-group button:hover { background: #f8fafc; color: var(--foreground); }
+
+/* "Remember me" + "Forgot password" row */
+.login-pf-settings,
+#kc-form-options {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 0 4px;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--foreground);
+}
+.checkbox input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: var(--primary);
+}
+
+#kc-form-options a,
+.login-pf-settings a {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+#kc-form-options a:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------------ */
+/* Buttons                                                             */
+/* ------------------------------------------------------------------ */
+
+.btn,
+input[type="submit"],
+button[type="submit"],
+.btn-primary,
+.pf-c-button.pf-m-primary {
+  width: 100%;
+  height: 46px;
+  padding: 0 16px;
+  background: var(--primary) !important;
+  color: #fff !important;
+  border: 1px solid var(--primary) !important;
+  border-radius: var(--radius-field);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  margin-top: 22px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06),
+              inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary:hover,
+input[type="submit"]:hover,
+button[type="submit"]:hover,
+.pf-c-button.pf-m-primary:hover {
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+  box-shadow: 0 8px 20px -8px rgba(30, 136, 229, 0.50),
+              inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  transform: translateY(-1px);
+}
+.btn-primary:active,
+input[type="submit"]:active,
+button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+.btn-default {
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border-strong);
+}
+.btn-default:hover { background: #f8fafc; }
+
+/* "Try another way" link (Keycloak MFA fallback) */
+.gor-try-another {
+  margin-top: 12px;
+  text-align: center;
+}
+.gor-try-another a {
+  font-size: 13px;
+  color: var(--primary);
+  text-decoration: none;
+}
+.gor-try-another a:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------------ */
+/* Footer info block (registration link / forgot password etc.)        */
+/* ------------------------------------------------------------------ */
+
+.gor-info,
+#kc-info-wrapper {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+.gor-info a,
+#kc-info-wrapper a {
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+.gor-info a:hover { text-decoration: underline; }
+
+.gor-form-footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  max-width: 380px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Brand panel (right side)                                            */
+/* ------------------------------------------------------------------ */
+
+.gor-brand-panel {
+  position: relative;
+  height: 100%;
+  padding: 64px 72px;
+  display: flex;
+  flex-direction: column;
+  z-index: 1; /* sit above the ::before dot grid */
+}
+
+.gor-brand-panel__head {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 64px;
+  padding: 8px 16px 8px 8px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  align-self: flex-start;
+}
+
+.gor-brand-panel__logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.20));
+}
+
+.gor-brand-panel__org {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.gor-brand-panel__tagline {
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  margin: 0 0 20px;
+  max-width: 24ch;
+  background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.85) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* fallback */
+  color: #fff;
+}
+
+.gor-brand-panel__lede {
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.80);
+  max-width: 42ch;
+  margin: 0;
+}
+
+.gor-brand-panel__art {
+  position: absolute;
+  right: -120px;
+  bottom: -80px;
+  width: 720px;
+  height: 720px;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.gor-brand-panel__foot {
+  margin-top: auto;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+  position: relative;
+  z-index: 1;
+  letter-spacing: 0.01em;
+}
+
+.gor-flag {
+  display: inline-flex;
+  width: 22px;
+  height: 14px;
+  border-radius: 3px;
+  overflow: hidden;
+  flex-direction: column;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.20);
+  flex: 0 0 auto;
+}
+.gor-flag__stripe { flex: 1; }
+
+/* ------------------------------------------------------------------ */
+/* TOTP / 2FA pages (inherited login-config-totp, login-otp,           */
+/* select-authenticator, recovery-code pages). docs/implemented/mfa-totp.md */
+/* ------------------------------------------------------------------ */
+
+.gor-otp-help {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+#kc-totp-settings {
+  margin: 0 0 20px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--foreground);
+}
+#kc-totp-settings > li { margin-bottom: 14px; }
+#kc-totp-settings p { margin: 0 0 6px; }
+#kc-totp-supported-apps {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  list-style: disc;
+  color: var(--muted);
+}
+#kc-totp-secret-qr-code {
+  display: block;
+  width: 192px;
+  height: 192px;
+  margin: 8px 0;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+#kc-totp-secret-key {
+  display: inline-block;
+  padding: 6px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  word-break: break-all;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+/* PatternFly 3 right-aligns .form-horizontal labels for a two-column grid the
+   theme does not use; on these pages that put the label right and its "*" on
+   the next line. */
+.form-horizontal .control-label {
+  display: inline-block;
+  text-align: left;
+  padding-top: 0;
+}
+.required { color: var(--destructive); margin-left: 2px; }
+
+/* Select-authenticator: each option is a <button type="submit">, which the
+   generic submit rule above turns into a fixed-height primary button that
+   clips the description. Present them as selectable cards instead. */
+.select-auth-container { display: grid; gap: 10px; }
+button.select-auth-box-parent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: auto;
+  margin-top: 0;
+  padding: 14px 16px;
+  text-align: left;
+  white-space: normal;
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border-strong) !important;
+  box-shadow: none;
+}
+button.select-auth-box-parent:hover {
+  background: #f8fafc !important;
+  border-color: var(--primary) !important;
+  box-shadow: none;
+  transform: none;
+}
+.select-auth-box-icon { color: var(--primary); flex: 0 0 auto; }
+.select-auth-box-headline { font-size: 14px; font-weight: 600; }
+.select-auth-box-desc {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.select-auth-box-arrow { color: var(--muted); flex: 0 0 auto; }
+
+/* Recovery codes: the template numbers each code itself ("1: ..."), so the
+   list's own markers would number it twice. */
+.kc-recovery-codes-list {
+  margin: 12px 0;
+  padding: 12px 16px;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.kc-recovery-codes-list span { color: var(--muted); }
+.kc-recovery-codes-actions { display: flex; gap: 16px; margin-bottom: 12px; }
+.kc-recovery-codes-actions button {
+  width: auto;
+  height: auto;
+  margin-top: 0;
+  padding: 4px 0;
+  background: none !important;
+  color: var(--primary) !important;
+  border: 0 !important;
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Accessibility + motion                                              */
+/* ------------------------------------------------------------------ */
+
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --foreground: #000000;
+    --border: #000000;
+    --border-strong: #000000;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Keycloakify port additions (not in the reference file)              */
+/* ------------------------------------------------------------------ */
+
+/* PatternFly 3 paints html.login-pf near-black; the page is taller than
+   100vh on TOTP enrolment, so keep the page colour all the way down. */
+html.login-pf { background: var(--page); }
+
+/* kcFormClass is Bootstrap's form-horizontal, whose .form-group carries
+   -15px side margins; keep fields aligned with the page title. */
+.gor-form-card .form-horizontal .form-group { margin-left: 0; margin-right: 0; }
+.gor-form-card .form-horizontal #kc-form-buttons,
+.gor-form-card .form-horizontal #kc-form-options { padding-left: 0; padding-right: 0; }

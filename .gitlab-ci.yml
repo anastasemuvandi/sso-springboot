@@ -1,0 +1,466 @@
+# GitLab CI — GoRSSO / SSO.RISA (Spring Boot + React)
+#
+# Stage order is the spec's (SPEC §8): isolation, config-safety,
+# terraform-validate, unit-tests, openapi-drift, fgap-plan-check, console-gate,
+# terraform-plan, terraform-apply, delegated-check — plus `images`, which builds
+# and pushes every service image to $CI_REGISTRY once the gates are green.
+#
+# THE ISOLATION JOB IS DELIBERATELY NOT PATH-FILTERED AND NOT ENV-GATED.
+#   Every institution shares one realm (ADR-0001), so the only thing keeping
+#   institution A's local admin out of B is ordinary Java that an ordinary
+#   refactor can weaken from a long way away. It also fails when a required
+#   scenario class (ci/isolation-required.txt) collected zero tests: a gate that
+#   silently stops testing anything reports green forever.
+#
+# CI/CD VARIABLES (Settings → CI/CD → Variables; masked + protected where secret)
+#   TF_DEV_RUNNER            tag of a self-hosted runner on the dev network. Jobs
+#                            that reach the dev Keycloak (terraform-plan/apply,
+#                            delegated-check) are OMITTED when it is unset, so the
+#                            pipeline stays green on a project with no such runner.
+#   PG_CONN_STR              Terraform pg state backend, e.g.
+#                            postgres://user:pass@10.10.73.8:5432/sso_risa?sslmode=disable
+#   TF_VAR_keycloak_url, TF_VAR_keycloak_admin_username,
+#   TF_VAR_keycloak_admin_password   Keycloak admin for Terraform (env `dev`).
+#   KEYCLOAK_URL, KEYCLOAK_ADMIN, KEYCLOAK_ADMIN_PASSWORD
+#                            the same Keycloak for `delegated-check` (env `dev`).
+#   KEYCLOAK_CLIENT_SECRET   sso-client secret for `delegated-check` (env `dev`).
+#   CI_REGISTRY, CI_REGISTRY_IMAGE, CI_REGISTRY_USER, CI_REGISTRY_PASSWORD
+#                            provided by GitLab (container registry).
+#
+# Wrapper ops subcommands used here (java -jar sso-wrapper.jar <cmd>):
+#   delegated-validate, registry-validate, fgap-plan-check, delegated-check.
+
+stages:
+  - isolation
+  - config-safety
+  - terraform-validate
+  - unit-tests
+  - openapi-drift
+  - fgap-plan-check
+  - console-gate
+  - images
+  - terraform-plan
+  - terraform-apply
+  - delegated-check
+
+variables:
+  TF_VERSION: "1.9.8"
+  TF_DIR: infra/terraform
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "0"
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2 -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+  MAVEN_CLI: "-B --no-transfer-progress"
+
+# One pipeline per change: MR pipelines when an MR is open, branch pipelines
+# otherwise.
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_COMMIT_BRANCH
+
+# ---------------------------------------------------------------------------
+# Templates
+# ---------------------------------------------------------------------------
+
+.maven:
+  image: maven:3.9-eclipse-temurin-21
+  cache:
+    key:
+      files:
+        - pom.xml
+    paths:
+      - .m2/repository
+  before_script:
+    # Parent POM + the shared TOTP rule the wrapper and the Keycloak SPI use.
+    - mvn $MAVEN_CLI -q -N install
+    - mvn $MAVEN_CLI -q -f mfa-policy/pom.xml install -DskipTests
+
+# Testcontainers through Docker-in-Docker.
+.dind:
+  services:
+    - name: docker:27-dind
+      alias: docker
+      command: ["--tls=false"]
+  variables:
+    DOCKER_HOST: "tcp://docker:2375"
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
+    TESTCONTAINERS_HOST_OVERRIDE: "docker"
+    TESTCONTAINERS_RYUK_DISABLED: "true"
+
+.node:
+  image: node:22
+  variables:
+    npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  cache:
+    key: npm-$CI_JOB_NAME
+    paths:
+      - .npm
+
+.terraform:
+  image:
+    name: hashicorp/terraform:$TF_VERSION
+    entrypoint: [""]
+  before_script:
+    - apk add --no-cache jq bash
+    - cd "$TF_DIR"
+
+# Jobs that must reach the dev Keycloak on the internal network.
+.needs-dev-network:
+  tags:
+    - $TF_DEV_RUNNER
+  environment:
+    name: dev
+
+.terraform-paths: &terraform-paths
+  - infra/terraform/**/*
+  - configs/institutions.yaml
+  - configs/delegated-permissions/templates.json
+  - configs/generated/fgap-v2-plan.json
+  - .gitlab-ci.yml
+
+# ---------------------------------------------------------------------------
+# stage: isolation — THE SECURITY GATE. No `rules:`, no `changes:`, on purpose.
+# ---------------------------------------------------------------------------
+
+isolation:
+  stage: isolation
+  extends:
+    - .maven
+    - .dind
+  script:
+    # -Pit: scenario classes may use the Keycloak 26.2 Testcontainer
+    # (FGAP v2, caller's own token). failIfNoSpecifiedTests=false so the report
+    # check below, not surefire, owns the "nothing ran" verdict and names the
+    # missing classes.
+    - mvn $MAVEN_CLI -Pit -f sso-wrapper/pom.xml test -Dtest='*Isolation*' -Dsurefire.failIfNoSpecifiedTests=false
+    - sh ci/check-isolation-reports.sh sso-wrapper/target/surefire-reports ci/isolation-required.txt
+  artifacts:
+    when: always
+    reports:
+      junit: sso-wrapper/target/surefire-reports/TEST-*.xml
+    expire_in: 30 days
+
+# ---------------------------------------------------------------------------
+# stage: config-safety — templates + registry, no Keycloak.
+# ---------------------------------------------------------------------------
+
+config-safety:
+  stage: config-safety
+  extends: .maven
+  script:
+    # The wrapper jar carries the ops subcommands; reused by fgap-plan-check
+    # and delegated-check through the artifact below.
+    - mvn $MAVEN_CLI -q -f sso-wrapper/pom.xml package -DskipTests
+    - export WRAPPER_JAR=$(ls sso-wrapper/target/sso-wrapper-*.jar | grep -v plain | head -n1)
+    # Unsafe template (allow outside the namespace, broad admin role) → non-zero.
+    - java -jar "$WRAPPER_JAR" delegated-validate
+    # Slug rules, slug-prefix collisions, IPPIS code / client-id collisions, tiers.
+    - java -jar "$WRAPPER_JAR" registry-validate
+  artifacts:
+    paths:
+      - sso-wrapper/target/sso-wrapper-*.jar
+    expire_in: 1 day
+
+# ---------------------------------------------------------------------------
+# stage: terraform-validate — offline: no Keycloak, no backend, no credentials.
+# ---------------------------------------------------------------------------
+
+terraform-validate:
+  stage: terraform-validate
+  extends: .terraform
+  needs: []
+  script:
+    - terraform fmt -check -recursive -diff
+    - terraform init -backend=false
+    - terraform validate
+  rules:
+    - changes: *terraform-paths
+
+# ---------------------------------------------------------------------------
+# stage: unit-tests — every Maven module (JaCoCo line coverage >= 60% per
+# module, profile `coverage` in the root pom) plus the three frontends.
+# ---------------------------------------------------------------------------
+
+unit-tests:java:
+  stage: unit-tests
+  extends: .maven
+  needs: []
+  script:
+    - mvn $MAVEN_CLI -Pcoverage verify
+  coverage: '/Total.*?([0-9]{1,3})%/'
+  artifacts:
+    when: always
+    reports:
+      junit: "**/target/surefire-reports/TEST-*.xml"
+    paths:
+      - "**/target/site/jacoco/"
+    expire_in: 30 days
+
+.unit-tests-node:
+  stage: unit-tests
+  extends: .node
+  needs: []
+  script:
+    - cd "$NODE_DIR"
+    - npm ci --no-audit --no-fund
+    - npm test
+
+unit-tests:console-web:
+  extends: .unit-tests-node
+  variables:
+    NODE_DIR: console-web
+
+unit-tests:keycloak-theme:
+  extends: .unit-tests-node
+  variables:
+    NODE_DIR: keycloak-theme
+
+unit-tests:sdk-react:
+  extends: .unit-tests-node
+  variables:
+    NODE_DIR: sdk/react
+
+# ---------------------------------------------------------------------------
+# stage: openapi-drift — the committed openapi.json contracts must match the code.
+# ---------------------------------------------------------------------------
+
+openapi-drift:
+  stage: openapi-drift
+  extends: .maven
+  needs: []
+  script:
+    - |
+      fail=0
+      mvn $MAVEN_CLI -f sso-wrapper/pom.xml test -Dtest=OpenApiContractTest -Dsurefire.failIfNoSpecifiedTests=false || fail=1
+      mvn $MAVEN_CLI -f audit-service/pom.xml test -Dtest=OpenApiSpecTest -Dsurefire.failIfNoSpecifiedTests=false || fail=1
+      mvn $MAVEN_CLI -f notification-service/pom.xml test -Dtest=OpenApiStalenessTest -Dsurefire.failIfNoSpecifiedTests=false || fail=1
+      if [ "$fail" -ne 0 ]; then
+        echo "A committed openapi.json is stale. Regenerate it (make openapi), commit it,"
+        echo "then regenerate the SDKs (make sdk)."
+        exit 1
+      fi
+
+# ---------------------------------------------------------------------------
+# stage: fgap-plan-check — configs/generated/fgap-v2-plan.json must be the
+# current projection of templates.json + institutions.yaml. Stale is the
+# dangerous state: it applies cleanly and leaves local admins under-permissioned.
+# ---------------------------------------------------------------------------
+
+fgap-plan-check:
+  stage: fgap-plan-check
+  image: eclipse-temurin:21-jre
+  needs:
+    - job: config-safety
+      artifacts: true
+  script:
+    - export WRAPPER_JAR=$(ls sso-wrapper/target/sso-wrapper-*.jar | grep -v plain | head -n1)
+    - |
+      if ! java -jar "$WRAPPER_JAR" fgap-plan-check; then
+        echo "configs/generated/fgap-v2-plan.json is stale. Run 'make fgap-plan' and commit it."
+        exit 1
+      fi
+
+# ---------------------------------------------------------------------------
+# stage: console-gate — tsc, vite build, lint, vitest, Playwright gates against
+# the built console and a stubbed BFF/wrapper.
+# ---------------------------------------------------------------------------
+
+console-gate:
+  stage: console-gate
+  # Matches @playwright/test in console-web/package.json (browsers preinstalled).
+  image: mcr.microsoft.com/playwright:v1.48.0-jammy
+  needs: []
+  variables:
+    npm_config_cache: "$CI_PROJECT_DIR/.npm"
+    CI: "true"
+  cache:
+    key:
+      files:
+        - console-web/package-lock.json
+    paths:
+      - .npm
+  script:
+    - cd console-web
+    - npm ci --no-audit --no-fund
+    - npm run typecheck
+    - npm run build
+    - npm run lint
+    - npm test
+    - npm run test:e2e
+  artifacts:
+    when: on_failure
+    paths:
+      - console-web/test-results/
+      - console-web/playwright-report/
+    expire_in: 7 days
+
+# ---------------------------------------------------------------------------
+# stage: images — build every service image from the repo root, push to
+# $CI_REGISTRY_IMAGE/<name>:<short sha> (+ :latest on the default branch).
+# ---------------------------------------------------------------------------
+
+images:
+  stage: images
+  image: docker:27
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_BUILDKIT: "1"
+    DOCKER_TLS_CERTDIR: "/certs"
+  parallel:
+    matrix:
+      - NAME: keycloak
+        DOCKERFILE: keycloak/Dockerfile
+      - NAME: sso-wrapper
+        DOCKERFILE: deploy/docker/sso-wrapper.Dockerfile
+      - NAME: console-bff
+        DOCKERFILE: console-bff/Dockerfile
+      - NAME: audit-service
+        DOCKERFILE: audit-service/Dockerfile
+      - NAME: notification-service
+        DOCKERFILE: notification-service/Dockerfile
+      - NAME: ippis-mock
+        DOCKERFILE: ippis-mock/Dockerfile
+      - NAME: seeder
+        DOCKERFILE: tools/seeder/Dockerfile
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  script:
+    - IMAGE="$CI_REGISTRY_IMAGE/$NAME"
+    - docker pull "$IMAGE:latest" || true
+    - >
+      docker build
+      --build-arg BUILDKIT_INLINE_CACHE=1
+      --cache-from "$IMAGE:latest"
+      -f "$DOCKERFILE"
+      -t "$IMAGE:$CI_COMMIT_SHORT_SHA"
+      .
+    - docker push "$IMAGE:$CI_COMMIT_SHORT_SHA"
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
+        docker tag "$IMAGE:$CI_COMMIT_SHORT_SHA" "$IMAGE:latest"
+        docker push "$IMAGE:latest"
+      fi
+  rules:
+    - if: $CI_REGISTRY == null || $CI_REGISTRY == ""
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+# ---------------------------------------------------------------------------
+# stage: terraform-plan — dev runner only.
+# ---------------------------------------------------------------------------
+
+terraform-plan:
+  stage: terraform-plan
+  extends:
+    - .terraform
+    - .needs-dev-network
+  needs:
+    - job: config-safety
+    - job: terraform-validate
+      optional: true
+    - job: fgap-plan-check
+  # The pg backend takes its own lock; queueing here gives a clear "waiting"
+  # status instead of a lock-timeout failure.
+  resource_group: terraform-dev
+  script:
+    - terraform init -backend-config=envs/dev.backend.hcl -backend-config="conn_str=${PG_CONN_STR}"
+    - terraform plan -var-file=envs/dev.tfvars -out=tfplan -no-color | tee plan.txt
+    - terraform show -json tfplan > plan.json
+    # A plan that destroys is almost never what an onboarding change intends —
+    # usually a renamed slug (forbidden: it is in live tokens) or a deleted
+    # registry entry instead of `status: decommissioned`. Fail and make a human look.
+    - |
+      destroys=$(jq '[.resource_changes[]?
+                      | select(.change.actions | index("delete"))] | length' plan.json)
+      if [ "$destroys" -gt 0 ]; then
+        echo "ERROR: plan would DESTROY $destroys resource(s)."
+        jq -r '.resource_changes[]?
+               | select(.change.actions | index("delete"))
+               | "  - \(.address)"' plan.json
+        echo 'Renaming a slug or deleting a registry entry is not an onboarding'
+        echo 'change. Mark the institution "status: decommissioned" instead, or'
+        echo 'apply it by hand with a reviewed, deliberate justification.'
+        exit 1
+      fi
+    # Summary shape GitLab's MR widget expects.
+    - |
+      jq -r '([.resource_changes[]?.change.actions?] | flatten)
+             | {"create": (map(select(. == "create")) | length),
+                "update": (map(select(. == "update")) | length),
+                "delete": (map(select(. == "delete")) | length)}' plan.json > plan-summary.json
+  artifacts:
+    when: always
+    paths:
+      - $TF_DIR/plan.txt
+      - $TF_DIR/plan.json
+    reports:
+      terraform: $TF_DIR/plan-summary.json
+    expire_in: 14 days
+  rules:
+    - if: $TF_DEV_RUNNER == null || $TF_DEV_RUNNER == ""
+      when: never
+    - changes: *terraform-paths
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+# ---------------------------------------------------------------------------
+# stage: terraform-apply — dev runner, always manual.
+# ---------------------------------------------------------------------------
+
+terraform-apply:
+  stage: terraform-apply
+  extends:
+    - .terraform
+    - .needs-dev-network
+  needs:
+    - terraform-plan
+  resource_group: terraform-dev
+  script:
+    - terraform init -backend-config=envs/dev.backend.hcl -backend-config="conn_str=${PG_CONN_STR}"
+    # Re-planned rather than reusing the artifact: a stale plan applied to a
+    # moved realm is worse than a few extra seconds.
+    - terraform apply -auto-approve -var-file=envs/dev.tfvars
+    - terraform output -json institutions
+  rules:
+    - if: $TF_DEV_RUNNER == null || $TF_DEV_RUNNER == ""
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
+      when: manual
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: manual
+
+# ---------------------------------------------------------------------------
+# stage: delegated-check — post-apply audit against the live dev realm: no
+# institution admin holds a broad role, no hand-made grant, no missing role.
+# Exits non-zero on any finding.
+# ---------------------------------------------------------------------------
+
+delegated-check:
+  stage: delegated-check
+  image: eclipse-temurin:21-jre
+  extends: .needs-dev-network
+  needs:
+    - job: terraform-apply
+    - job: config-safety
+      artifacts: true
+  variables:
+    KEYCLOAK_SERVER_URL: $KEYCLOAK_URL
+    KEYCLOAK_ADMIN_USERNAME: $KEYCLOAK_ADMIN
+    KEYCLOAK_REALM: government-internal
+    # The wrapper's own service-account client — never a ministry portal.
+    KEYCLOAK_CLIENT_ID: sso-client
+  script:
+    - export WRAPPER_JAR=$(ls sso-wrapper/target/sso-wrapper-*.jar | grep -v plain | head -n1)
+    - java -jar "$WRAPPER_JAR" delegated-check
+  rules:
+    - if: $TF_DEV_RUNNER == null || $TF_DEV_RUNNER == ""
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "web"

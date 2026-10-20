@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens ported from the reference console (admin-ui/app/globals.css):
+ * pale sky-blue page chrome, white panels, a sky-blue primary. Government of
+ * Rwanda flag accents (blue/yellow/green) are available as `gor-*` colours. */
+@layer base {
+  :root {
+    --page: 200 50% 95%;
+    --page-foreground: 222 47% 11%;
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 211 89% 52%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 211 96% 92%;
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 33% 95%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 211 89% 52%;
+    --sidebar: 210 20% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-muted: 215 16% 56%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-active: 0 0% 100%;
+    --tile-violet-from: 258 90% 76%;
+    --tile-violet-to: 258 85% 60%;
+    --tile-pink-from: 330 90% 80%;
+    --tile-pink-to: 330 80% 60%;
+    --tile-sky-from: 211 95% 75%;
+    --tile-sky-to: 211 89% 52%;
+    --tile-amber-from: 45 95% 70%;
+    --tile-amber-to: 35 95% 56%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --page: 222 47% 10%;
+    --page-foreground: 210 20% 96%;
+    --background: 222 47% 11%;
+    --foreground: 210 20% 96%;
+    --card: 222 47% 13%;
+    --card-foreground: 210 20% 96%;
+    --popover: 222 47% 13%;
+    --popover-foreground: 210 20% 96%;
+    --primary: 211 89% 60%;
+    --primary-foreground: 222 47% 11%;
+    --primary-soft: 211 60% 22%;
+    --secondary: 222 30% 17%;
+    --secondary-foreground: 210 20% 96%;
+    --muted: 222 30% 17%;
+    --muted-foreground: 215 16% 65%;
+    --accent: 222 30% 20%;
+    --accent-foreground: 210 20% 96%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 30% 22%;
+    --input: 222 30% 22%;
+    --ring: 211 89% 60%;
+    --sidebar: 222 47% 12%;
+    --sidebar-foreground: 210 20% 96%;
+    --sidebar-muted: 215 16% 65%;
+    --sidebar-border: 222 30% 22%;
+    --sidebar-active: 222 47% 17%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html,
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01", "ss03";
+  }
+}
+
+@layer utilities {
+  .tile-violet { background-image: linear-gradient(135deg, hsl(var(--tile-violet-from)), hsl(var(--tile-violet-to))); }
+  .tile-pink { background-image: linear-gradient(135deg, hsl(var(--tile-pink-from)), hsl(var(--tile-pink-to))); }
+  .tile-sky { background-image: linear-gradient(135deg, hsl(var(--tile-sky-from)), hsl(var(--tile-sky-to))); }
+  .tile-amber { background-image: linear-gradient(135deg, hsl(var(--tile-amber-from)), hsl(var(--tile-amber-to))); }
+  .promo-banner { background-image: linear-gradient(135deg, hsl(var(--primary-soft)) 0%, hsl(210 96% 96%) 100%); }
+  .gor-flag-stripe { background-image: linear-gradient(90deg, #00A1DE 0 50%, #FAD201 50% 75%, #20603D 75% 100%); }
+}

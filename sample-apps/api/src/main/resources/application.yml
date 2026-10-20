@@ -1,0 +1,29 @@
+# GoRSSO sample API. Pick a ministry: SPRING_PROFILES_ACTIVE=minagri | minisante.
+spring:
+  application:
+    name: gorsso-sample-api
+
+server:
+  port: ${PORT:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+gorsso:
+  # COMPARED to the token's iss (browser-facing Keycloak issuer — KEYCLOAK_LOCAL_ISSUER/realms/<realm>).
+  issuer-uri: ${GORSSO_ISSUER_URI:http://localhost:8080/realms/government-internal}
+  # FETCHED for signing keys; inside Docker point it at a reachable host. Empty = <issuer>/protocol/openid-connect/certs.
+  jwk-set-uri: ${GORSSO_JWK_SET_URI:}
+  client-id: ${GORSSO_CLIENT_ID:}
+  join-key:
+    column: ${GORSSO_JOIN_COLUMN:email}
+  resource-server:
+    permit-all:
+      - /actuator/health
+      - /actuator/health/**
+      - /actuator/info
+      - /api/public/**
+      - /error

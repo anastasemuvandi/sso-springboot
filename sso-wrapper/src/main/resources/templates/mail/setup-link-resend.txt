@@ -1,0 +1,18 @@
+Hello [(${name})],
+
+You asked for a new link to set the password of your Government of Rwanda
+single sign-on account.
+
+  Username: [(${username})]
+
+Choose your password here:
+
+  [(${setPasswordUrl})]
+
+The link works once and expires in [(${lifespanHours})] hours. Any link sent to you
+before this one no longer works. If you did not ask for this, you can ignore
+this message — nothing changes until the link is used.
+
+Nobody will ever ask you for your password. This message does not contain one.
+
+— Government of Rwanda SSO

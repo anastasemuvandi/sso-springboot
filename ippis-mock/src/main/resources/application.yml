@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: ippis-mock
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  # Same internal port as the reference mock; compose publishes it on 8003.
+  port: ${PORT:8002}
+  shutdown: graceful
+
+management:
+  endpoints.web.exposure.include: health,info
+  endpoint.health.probes.enabled: true
+
+ippis-mock:
+  # Shared key the SSO sends as X-IPPIS-API-Key (IPPIS_API_KEY_FILE supported).
+  api-key: ${IPPIS_API_KEY:change-me-in-ippis}
+  # Optional JSON persistence. Empty = in-memory only (reseeded on every start).
+  data-file: ${IPPIS_MOCK_DATA_FILE:}
+  webhook:
+    # Opt-in push emission: both must be set (IPPIS_WEBHOOK_SECRET_FILE supported).
+    url: ${SSO_EVENTS_URL:}
+    secret: ${IPPIS_WEBHOOK_SECRET:}
+    timeout: ${IPPIS_MOCK_WEBHOOK_TIMEOUT:5s}
+    # timestamped: sha256=HMAC(secret, timestamp + raw body) + X-IPPIS-Timestamp (SPEC §5.8)
+    # body:        sha256=HMAC(secret, raw body)  (the Python reference wrapper's scheme)
+    signature-mode: ${IPPIS_MOCK_SIGNATURE_MODE:timestamped}

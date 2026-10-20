@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${lang}">
+<head th:replace="~{account/layout :: head}"></head>
+<body>
+<div class="page">
+  <header th:replace="~{account/layout :: brand}"></header>
+  <main class="card">
+    <h1 th:text="${t.set_title}">Choose your password</h1>
+    <p><span th:text="${t.set_intro}">You are setting the password for</span> <span class="who" th:text="${username}">user</span>.</p>
+    <p class="err" role="alert" th:if="${error}" th:text="${error}">error</p>
+    <form method="post" action="setup">
+      <input type="hidden" name="token" th:value="${token}">
+      <input type="hidden" name="lang" th:value="${lang}">
+      <input type="hidden" name="username" th:value="${username}" autocomplete="username">
+      <label for="password" th:text="${t.new_password}">New password</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" required maxlength="256">
+      <label for="confirm" th:text="${t.confirm}">Confirm the password</label>
+      <input id="confirm" name="confirm" type="password" autocomplete="new-password" required maxlength="256">
+      <p class="hint" th:text="${t.rules}">At least 10 characters...</p>
+      <button type="submit" th:text="${t.set_submit}">Set my password</button>
+    </form>
+  </main>
+  <footer th:replace="~{account/layout :: footer}"></footer>
+</div>
+</body>
+</html>

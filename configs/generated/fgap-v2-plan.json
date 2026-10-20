@@ -1,0 +1,1367 @@
+{
+  "_comment": "GENERATED FILE \u2014 do not edit. Produced by scripts/render_fgap_plan.py from configs/delegated-permissions/templates.json and configs/institutions.yaml. Run `make fgap-plan` after changing either; CI fails if this is stale.",
+  "version": 1,
+  "source": {
+    "templates": "configs/delegated-permissions/templates.json",
+    "registry": "configs/institutions.yaml"
+  },
+  "institutions": [
+    "mifotra",
+    "minagri",
+    "mineacom",
+    "mineduc",
+    "minijust",
+    "mininfra",
+    "minisante",
+    "rdb",
+    "rra"
+  ],
+  "policies": [
+    {
+      "institution": "mifotra",
+      "name": "inst:mifotra:institution-admin",
+      "description": "Holders of ['inst:mifotra:admin'] in 'mifotra' (tiers: ['institution-admin']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mifotra:admin"
+      ]
+    },
+    {
+      "institution": "mifotra",
+      "name": "inst:mifotra:institution-admin+institution-auditor",
+      "description": "Holders of ['inst:mifotra:admin', 'inst:mifotra:auditor'] in 'mifotra' (tiers: ['institution-admin', 'institution-auditor']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mifotra:admin",
+        "inst:mifotra:auditor"
+      ]
+    },
+    {
+      "institution": "mifotra",
+      "name": "inst:mifotra:institution-admin+institution-auditor+institution-hr",
+      "description": "Holders of ['inst:mifotra:admin', 'inst:mifotra:auditor', 'inst:mifotra:hr'] in 'mifotra' (tiers: ['institution-admin', 'institution-auditor', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mifotra:admin",
+        "inst:mifotra:auditor",
+        "inst:mifotra:hr"
+      ]
+    },
+    {
+      "institution": "mifotra",
+      "name": "inst:mifotra:institution-admin+institution-hr",
+      "description": "Holders of ['inst:mifotra:admin', 'inst:mifotra:hr'] in 'mifotra' (tiers: ['institution-admin', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mifotra:admin",
+        "inst:mifotra:hr"
+      ]
+    },
+    {
+      "institution": "minagri",
+      "name": "inst:minagri:institution-admin",
+      "description": "Holders of ['inst:minagri:admin'] in 'minagri' (tiers: ['institution-admin']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:minagri:admin"
+      ]
+    },
+    {
+      "institution": "minagri",
+      "name": "inst:minagri:institution-admin+institution-auditor",
+      "description": "Holders of ['inst:minagri:admin', 'inst:minagri:auditor'] in 'minagri' (tiers: ['institution-admin', 'institution-auditor']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:minagri:admin",
+        "inst:minagri:auditor"
+      ]
+    },
+    {
+      "institution": "minagri",
+      "name": "inst:minagri:institution-admin+institution-auditor+institution-hr",
+      "description": "Holders of ['inst:minagri:admin', 'inst:minagri:auditor', 'inst:minagri:hr'] in 'minagri' (tiers: ['institution-admin', 'institution-auditor', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:minagri:admin",
+        "inst:minagri:auditor",
+        "inst:minagri:hr"
+      ]
+    },
+    {
+      "institution": "minagri",
+      "name": "inst:minagri:institution-admin+institution-hr",
+      "description": "Holders of ['inst:minagri:admin', 'inst:minagri:hr'] in 'minagri' (tiers: ['institution-admin', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:minagri:admin",
+        "inst:minagri:hr"
+      ]
+    },
+    {
+      "institution": "mineacom",
+      "name": "inst:mineacom:institution-admin",
+      "description": "Holders of ['inst:mineacom:admin'] in 'mineacom' (tiers: ['institution-admin']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mineacom:admin"
+      ]
+    },
+    {
+      "institution": "mineacom",
+      "name": "inst:mineacom:institution-admin+institution-auditor+institution-hr",
+      "description": "Holders of ['inst:mineacom:admin', 'inst:mineacom:auditor', 'inst:mineacom:hr'] in 'mineacom' (tiers: ['institution-admin', 'institution-auditor', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mineacom:admin",
+        "inst:mineacom:auditor",
+        "inst:mineacom:hr"
+      ]
+    },
+    {
+      "institution": "mineacom",
+      "name": "inst:mineacom:institution-admin+institution-hr",
+      "description": "Holders of ['inst:mineacom:admin', 'inst:mineacom:hr'] in 'mineacom' (tiers: ['institution-admin', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mineacom:admin",
+        "inst:mineacom:hr"
+      ]
+    },
+    {
+      "institution": "mineduc",
+      "name": "inst:mineduc:institution-admin",
+      "description": "Holders of ['inst:mineduc:admin'] in 'mineduc' (tiers: ['institution-admin']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mineduc:admin"
+      ]
+    },
+    {
+      "institution": "mineduc",
+      "name": "inst:mineduc:institution-admin+institution-auditor",
+      "description": "Holders of ['inst:mineduc:admin', 'inst:mineduc:auditor'] in 'mineduc' (tiers: ['institution-admin', 'institution-auditor']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mineduc:admin",
+        "inst:mineduc:auditor"
+      ]
+    },
+    {
+      "institution": "mineduc",
+      "name": "inst:mineduc:institution-admin+institution-auditor+institution-hr",
+      "description": "Holders of ['inst:mineduc:admin', 'inst:mineduc:auditor', 'inst:mineduc:hr'] in 'mineduc' (tiers: ['institution-admin', 'institution-auditor', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mineduc:admin",
+        "inst:mineduc:auditor",
+        "inst:mineduc:hr"
+      ]
+    },
+    {
+      "institution": "mineduc",
+      "name": "inst:mineduc:institution-admin+institution-hr",
+      "description": "Holders of ['inst:mineduc:admin', 'inst:mineduc:hr'] in 'mineduc' (tiers: ['institution-admin', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mineduc:admin",
+        "inst:mineduc:hr"
+      ]
+    },
+    {
+      "institution": "minijust",
+      "name": "inst:minijust:institution-admin",
+      "description": "Holders of ['inst:minijust:admin'] in 'minijust' (tiers: ['institution-admin']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:minijust:admin"
+      ]
+    },
+    {
+      "institution": "minijust",
+      "name": "inst:minijust:institution-admin+institution-auditor+institution-hr",
+      "description": "Holders of ['inst:minijust:admin', 'inst:minijust:auditor', 'inst:minijust:hr'] in 'minijust' (tiers: ['institution-admin', 'institution-auditor', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:minijust:admin",
+        "inst:minijust:auditor",
+        "inst:minijust:hr"
+      ]
+    },
+    {
+      "institution": "minijust",
+      "name": "inst:minijust:institution-admin+institution-hr",
+      "description": "Holders of ['inst:minijust:admin', 'inst:minijust:hr'] in 'minijust' (tiers: ['institution-admin', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:minijust:admin",
+        "inst:minijust:hr"
+      ]
+    },
+    {
+      "institution": "mininfra",
+      "name": "inst:mininfra:institution-admin",
+      "description": "Holders of ['inst:mininfra:admin'] in 'mininfra' (tiers: ['institution-admin']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mininfra:admin"
+      ]
+    },
+    {
+      "institution": "mininfra",
+      "name": "inst:mininfra:institution-admin+institution-auditor+institution-hr",
+      "description": "Holders of ['inst:mininfra:admin', 'inst:mininfra:auditor', 'inst:mininfra:hr'] in 'mininfra' (tiers: ['institution-admin', 'institution-auditor', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mininfra:admin",
+        "inst:mininfra:auditor",
+        "inst:mininfra:hr"
+      ]
+    },
+    {
+      "institution": "mininfra",
+      "name": "inst:mininfra:institution-admin+institution-hr",
+      "description": "Holders of ['inst:mininfra:admin', 'inst:mininfra:hr'] in 'mininfra' (tiers: ['institution-admin', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:mininfra:admin",
+        "inst:mininfra:hr"
+      ]
+    },
+    {
+      "institution": "minisante",
+      "name": "inst:minisante:institution-admin",
+      "description": "Holders of ['inst:minisante:admin'] in 'minisante' (tiers: ['institution-admin']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:minisante:admin"
+      ]
+    },
+    {
+      "institution": "minisante",
+      "name": "inst:minisante:institution-admin+institution-auditor",
+      "description": "Holders of ['inst:minisante:admin', 'inst:minisante:auditor'] in 'minisante' (tiers: ['institution-admin', 'institution-auditor']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:minisante:admin",
+        "inst:minisante:auditor"
+      ]
+    },
+    {
+      "institution": "minisante",
+      "name": "inst:minisante:institution-admin+institution-auditor+institution-hr",
+      "description": "Holders of ['inst:minisante:admin', 'inst:minisante:auditor', 'inst:minisante:hr'] in 'minisante' (tiers: ['institution-admin', 'institution-auditor', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:minisante:admin",
+        "inst:minisante:auditor",
+        "inst:minisante:hr"
+      ]
+    },
+    {
+      "institution": "minisante",
+      "name": "inst:minisante:institution-admin+institution-hr",
+      "description": "Holders of ['inst:minisante:admin', 'inst:minisante:hr'] in 'minisante' (tiers: ['institution-admin', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:minisante:admin",
+        "inst:minisante:hr"
+      ]
+    },
+    {
+      "institution": "rdb",
+      "name": "inst:rdb:institution-admin",
+      "description": "Holders of ['inst:rdb:admin'] in 'rdb' (tiers: ['institution-admin']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:rdb:admin"
+      ]
+    },
+    {
+      "institution": "rdb",
+      "name": "inst:rdb:institution-admin+institution-auditor",
+      "description": "Holders of ['inst:rdb:admin', 'inst:rdb:auditor'] in 'rdb' (tiers: ['institution-admin', 'institution-auditor']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:rdb:admin",
+        "inst:rdb:auditor"
+      ]
+    },
+    {
+      "institution": "rdb",
+      "name": "inst:rdb:institution-admin+institution-auditor+institution-hr",
+      "description": "Holders of ['inst:rdb:admin', 'inst:rdb:auditor', 'inst:rdb:hr'] in 'rdb' (tiers: ['institution-admin', 'institution-auditor', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:rdb:admin",
+        "inst:rdb:auditor",
+        "inst:rdb:hr"
+      ]
+    },
+    {
+      "institution": "rdb",
+      "name": "inst:rdb:institution-admin+institution-hr",
+      "description": "Holders of ['inst:rdb:admin', 'inst:rdb:hr'] in 'rdb' (tiers: ['institution-admin', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:rdb:admin",
+        "inst:rdb:hr"
+      ]
+    },
+    {
+      "institution": "rra",
+      "name": "inst:rra:institution-admin",
+      "description": "Holders of ['inst:rra:admin'] in 'rra' (tiers: ['institution-admin']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:rra:admin"
+      ]
+    },
+    {
+      "institution": "rra",
+      "name": "inst:rra:institution-admin+institution-auditor",
+      "description": "Holders of ['inst:rra:admin', 'inst:rra:auditor'] in 'rra' (tiers: ['institution-admin', 'institution-auditor']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:rra:admin",
+        "inst:rra:auditor"
+      ]
+    },
+    {
+      "institution": "rra",
+      "name": "inst:rra:institution-admin+institution-auditor+institution-hr",
+      "description": "Holders of ['inst:rra:admin', 'inst:rra:auditor', 'inst:rra:hr'] in 'rra' (tiers: ['institution-admin', 'institution-auditor', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:rra:admin",
+        "inst:rra:auditor",
+        "inst:rra:hr"
+      ]
+    },
+    {
+      "institution": "rra",
+      "name": "inst:rra:institution-admin+institution-hr",
+      "description": "Holders of ['inst:rra:admin', 'inst:rra:hr'] in 'rra' (tiers: ['institution-admin', 'institution-hr']). Projected from configs/delegated-permissions/templates.json; do not edit by hand.",
+      "roles": [
+        "inst:rra:admin",
+        "inst:rra:hr"
+      ]
+    },
+    {
+      "institution": "_shared",
+      "name": "inst:_shared:map-roles",
+      "description": "Any delegated admin permitted to map roles, in any institution. Shared because a per-institution copy would cover every user and, under the resource server's UNANIMOUS strategy, veto every other institution's copy. Which users and which roles remain bounded by the per-institution Groups and Roles permissions.",
+      "roles": [
+        "inst:mifotra:admin",
+        "inst:mifotra:hr",
+        "inst:minagri:admin",
+        "inst:minagri:hr",
+        "inst:mineacom:admin",
+        "inst:mineacom:hr",
+        "inst:mineduc:admin",
+        "inst:mineduc:hr",
+        "inst:minijust:admin",
+        "inst:minijust:hr",
+        "inst:mininfra:admin",
+        "inst:mininfra:hr",
+        "inst:minisante:admin",
+        "inst:minisante:hr",
+        "inst:rdb:admin",
+        "inst:rdb:hr",
+        "inst:rra:admin",
+        "inst:rra:hr"
+      ]
+    }
+  ],
+  "permissions": [
+    {
+      "institution": "mifotra",
+      "name": "inst:mifotra:institution-admin:clients:manage",
+      "description": "'mifotra': manage on 1 Clients for tiers ['institution-admin'].",
+      "resource_type": "Clients",
+      "resources": [
+        "mifotra-ippis-portal"
+      ],
+      "scopes": [
+        "manage"
+      ],
+      "policies": [
+        "inst:mifotra:institution-admin"
+      ]
+    },
+    {
+      "institution": "mifotra",
+      "name": "inst:mifotra:institution-admin+institution-auditor:clients:view",
+      "description": "'mifotra': view on 1 Clients for tiers ['institution-admin', 'institution-auditor'].",
+      "resource_type": "Clients",
+      "resources": [
+        "mifotra-ippis-portal"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:mifotra:institution-admin+institution-auditor"
+      ]
+    },
+    {
+      "institution": "mifotra",
+      "name": "inst:mifotra:institution-admin+institution-hr:groups:manage-members",
+      "description": "'mifotra': manage-members on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mifotra"
+      ],
+      "scopes": [
+        "manage-members"
+      ],
+      "policies": [
+        "inst:mifotra:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "mifotra",
+      "name": "inst:mifotra:institution-admin+institution-hr:groups:manage-membership",
+      "description": "'mifotra': manage-membership on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mifotra"
+      ],
+      "scopes": [
+        "manage-membership"
+      ],
+      "policies": [
+        "inst:mifotra:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "mifotra",
+      "name": "inst:mifotra:institution-admin+institution-auditor+institution-hr:groups:view",
+      "description": "'mifotra': view on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mifotra"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:mifotra:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "mifotra",
+      "name": "inst:mifotra:institution-admin+institution-auditor+institution-hr:groups:view-members",
+      "description": "'mifotra': view-members on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mifotra"
+      ],
+      "scopes": [
+        "view-members"
+      ],
+      "policies": [
+        "inst:mifotra:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "mifotra",
+      "name": "inst:mifotra:institution-admin:roles:map-role",
+      "description": "'mifotra': map-role on 2 Roles for tiers ['institution-admin'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:mifotra:auditor",
+        "inst:mifotra:hr"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:mifotra:institution-admin"
+      ]
+    },
+    {
+      "institution": "mifotra",
+      "name": "inst:mifotra:institution-admin+institution-hr:roles:map-role",
+      "description": "'mifotra': map-role on 1 Roles for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:mifotra:staff"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:mifotra:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "minagri",
+      "name": "inst:minagri:institution-admin:clients:manage",
+      "description": "'minagri': manage on 1 Clients for tiers ['institution-admin'].",
+      "resource_type": "Clients",
+      "resources": [
+        "minagri-kubaka-web"
+      ],
+      "scopes": [
+        "manage"
+      ],
+      "policies": [
+        "inst:minagri:institution-admin"
+      ]
+    },
+    {
+      "institution": "minagri",
+      "name": "inst:minagri:institution-admin+institution-auditor:clients:view",
+      "description": "'minagri': view on 1 Clients for tiers ['institution-admin', 'institution-auditor'].",
+      "resource_type": "Clients",
+      "resources": [
+        "minagri-kubaka-web"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:minagri:institution-admin+institution-auditor"
+      ]
+    },
+    {
+      "institution": "minagri",
+      "name": "inst:minagri:institution-admin+institution-hr:groups:manage-members",
+      "description": "'minagri': manage-members on 3 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/minagri",
+        "/minagri/extension",
+        "/minagri/planning"
+      ],
+      "scopes": [
+        "manage-members"
+      ],
+      "policies": [
+        "inst:minagri:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "minagri",
+      "name": "inst:minagri:institution-admin+institution-hr:groups:manage-membership",
+      "description": "'minagri': manage-membership on 3 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/minagri",
+        "/minagri/extension",
+        "/minagri/planning"
+      ],
+      "scopes": [
+        "manage-membership"
+      ],
+      "policies": [
+        "inst:minagri:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "minagri",
+      "name": "inst:minagri:institution-admin+institution-auditor+institution-hr:groups:view",
+      "description": "'minagri': view on 3 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/minagri",
+        "/minagri/extension",
+        "/minagri/planning"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:minagri:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "minagri",
+      "name": "inst:minagri:institution-admin+institution-auditor+institution-hr:groups:view-members",
+      "description": "'minagri': view-members on 3 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/minagri",
+        "/minagri/extension",
+        "/minagri/planning"
+      ],
+      "scopes": [
+        "view-members"
+      ],
+      "policies": [
+        "inst:minagri:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "minagri",
+      "name": "inst:minagri:institution-admin:roles:map-role",
+      "description": "'minagri': map-role on 2 Roles for tiers ['institution-admin'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:minagri:auditor",
+        "inst:minagri:hr"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:minagri:institution-admin"
+      ]
+    },
+    {
+      "institution": "minagri",
+      "name": "inst:minagri:institution-admin+institution-hr:roles:map-role",
+      "description": "'minagri': map-role on 1 Roles for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:minagri:staff"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:minagri:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "mineacom",
+      "name": "inst:mineacom:institution-admin+institution-hr:groups:manage-members",
+      "description": "'mineacom': manage-members on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mineacom"
+      ],
+      "scopes": [
+        "manage-members"
+      ],
+      "policies": [
+        "inst:mineacom:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "mineacom",
+      "name": "inst:mineacom:institution-admin+institution-hr:groups:manage-membership",
+      "description": "'mineacom': manage-membership on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mineacom"
+      ],
+      "scopes": [
+        "manage-membership"
+      ],
+      "policies": [
+        "inst:mineacom:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "mineacom",
+      "name": "inst:mineacom:institution-admin+institution-auditor+institution-hr:groups:view",
+      "description": "'mineacom': view on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mineacom"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:mineacom:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "mineacom",
+      "name": "inst:mineacom:institution-admin+institution-auditor+institution-hr:groups:view-members",
+      "description": "'mineacom': view-members on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mineacom"
+      ],
+      "scopes": [
+        "view-members"
+      ],
+      "policies": [
+        "inst:mineacom:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "mineacom",
+      "name": "inst:mineacom:institution-admin:roles:map-role",
+      "description": "'mineacom': map-role on 2 Roles for tiers ['institution-admin'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:mineacom:auditor",
+        "inst:mineacom:hr"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:mineacom:institution-admin"
+      ]
+    },
+    {
+      "institution": "mineacom",
+      "name": "inst:mineacom:institution-admin+institution-hr:roles:map-role",
+      "description": "'mineacom': map-role on 1 Roles for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:mineacom:staff"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:mineacom:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "mineduc",
+      "name": "inst:mineduc:institution-admin:clients:manage",
+      "description": "'mineduc': manage on 1 Clients for tiers ['institution-admin'].",
+      "resource_type": "Clients",
+      "resources": [
+        "mineduc-emis"
+      ],
+      "scopes": [
+        "manage"
+      ],
+      "policies": [
+        "inst:mineduc:institution-admin"
+      ]
+    },
+    {
+      "institution": "mineduc",
+      "name": "inst:mineduc:institution-admin+institution-auditor:clients:view",
+      "description": "'mineduc': view on 1 Clients for tiers ['institution-admin', 'institution-auditor'].",
+      "resource_type": "Clients",
+      "resources": [
+        "mineduc-emis"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:mineduc:institution-admin+institution-auditor"
+      ]
+    },
+    {
+      "institution": "mineduc",
+      "name": "inst:mineduc:institution-admin+institution-hr:groups:manage-members",
+      "description": "'mineduc': manage-members on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mineduc"
+      ],
+      "scopes": [
+        "manage-members"
+      ],
+      "policies": [
+        "inst:mineduc:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "mineduc",
+      "name": "inst:mineduc:institution-admin+institution-hr:groups:manage-membership",
+      "description": "'mineduc': manage-membership on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mineduc"
+      ],
+      "scopes": [
+        "manage-membership"
+      ],
+      "policies": [
+        "inst:mineduc:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "mineduc",
+      "name": "inst:mineduc:institution-admin+institution-auditor+institution-hr:groups:view",
+      "description": "'mineduc': view on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mineduc"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:mineduc:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "mineduc",
+      "name": "inst:mineduc:institution-admin+institution-auditor+institution-hr:groups:view-members",
+      "description": "'mineduc': view-members on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mineduc"
+      ],
+      "scopes": [
+        "view-members"
+      ],
+      "policies": [
+        "inst:mineduc:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "mineduc",
+      "name": "inst:mineduc:institution-admin:roles:map-role",
+      "description": "'mineduc': map-role on 2 Roles for tiers ['institution-admin'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:mineduc:auditor",
+        "inst:mineduc:hr"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:mineduc:institution-admin"
+      ]
+    },
+    {
+      "institution": "mineduc",
+      "name": "inst:mineduc:institution-admin+institution-hr:roles:map-role",
+      "description": "'mineduc': map-role on 1 Roles for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:mineduc:staff"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:mineduc:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "minijust",
+      "name": "inst:minijust:institution-admin+institution-hr:groups:manage-members",
+      "description": "'minijust': manage-members on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/minijust"
+      ],
+      "scopes": [
+        "manage-members"
+      ],
+      "policies": [
+        "inst:minijust:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "minijust",
+      "name": "inst:minijust:institution-admin+institution-hr:groups:manage-membership",
+      "description": "'minijust': manage-membership on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/minijust"
+      ],
+      "scopes": [
+        "manage-membership"
+      ],
+      "policies": [
+        "inst:minijust:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "minijust",
+      "name": "inst:minijust:institution-admin+institution-auditor+institution-hr:groups:view",
+      "description": "'minijust': view on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/minijust"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:minijust:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "minijust",
+      "name": "inst:minijust:institution-admin+institution-auditor+institution-hr:groups:view-members",
+      "description": "'minijust': view-members on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/minijust"
+      ],
+      "scopes": [
+        "view-members"
+      ],
+      "policies": [
+        "inst:minijust:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "minijust",
+      "name": "inst:minijust:institution-admin:roles:map-role",
+      "description": "'minijust': map-role on 2 Roles for tiers ['institution-admin'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:minijust:auditor",
+        "inst:minijust:hr"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:minijust:institution-admin"
+      ]
+    },
+    {
+      "institution": "minijust",
+      "name": "inst:minijust:institution-admin+institution-hr:roles:map-role",
+      "description": "'minijust': map-role on 1 Roles for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:minijust:staff"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:minijust:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "mininfra",
+      "name": "inst:mininfra:institution-admin+institution-hr:groups:manage-members",
+      "description": "'mininfra': manage-members on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mininfra"
+      ],
+      "scopes": [
+        "manage-members"
+      ],
+      "policies": [
+        "inst:mininfra:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "mininfra",
+      "name": "inst:mininfra:institution-admin+institution-hr:groups:manage-membership",
+      "description": "'mininfra': manage-membership on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mininfra"
+      ],
+      "scopes": [
+        "manage-membership"
+      ],
+      "policies": [
+        "inst:mininfra:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "mininfra",
+      "name": "inst:mininfra:institution-admin+institution-auditor+institution-hr:groups:view",
+      "description": "'mininfra': view on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mininfra"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:mininfra:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "mininfra",
+      "name": "inst:mininfra:institution-admin+institution-auditor+institution-hr:groups:view-members",
+      "description": "'mininfra': view-members on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/mininfra"
+      ],
+      "scopes": [
+        "view-members"
+      ],
+      "policies": [
+        "inst:mininfra:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "mininfra",
+      "name": "inst:mininfra:institution-admin:roles:map-role",
+      "description": "'mininfra': map-role on 2 Roles for tiers ['institution-admin'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:mininfra:auditor",
+        "inst:mininfra:hr"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:mininfra:institution-admin"
+      ]
+    },
+    {
+      "institution": "mininfra",
+      "name": "inst:mininfra:institution-admin+institution-hr:roles:map-role",
+      "description": "'mininfra': map-role on 1 Roles for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:mininfra:staff"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:mininfra:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "minisante",
+      "name": "inst:minisante:institution-admin:clients:manage",
+      "description": "'minisante': manage on 1 Clients for tiers ['institution-admin'].",
+      "resource_type": "Clients",
+      "resources": [
+        "minisante-hmis"
+      ],
+      "scopes": [
+        "manage"
+      ],
+      "policies": [
+        "inst:minisante:institution-admin"
+      ]
+    },
+    {
+      "institution": "minisante",
+      "name": "inst:minisante:institution-admin+institution-auditor:clients:view",
+      "description": "'minisante': view on 1 Clients for tiers ['institution-admin', 'institution-auditor'].",
+      "resource_type": "Clients",
+      "resources": [
+        "minisante-hmis"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:minisante:institution-admin+institution-auditor"
+      ]
+    },
+    {
+      "institution": "minisante",
+      "name": "inst:minisante:institution-admin+institution-hr:groups:manage-members",
+      "description": "'minisante': manage-members on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/minisante"
+      ],
+      "scopes": [
+        "manage-members"
+      ],
+      "policies": [
+        "inst:minisante:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "minisante",
+      "name": "inst:minisante:institution-admin+institution-hr:groups:manage-membership",
+      "description": "'minisante': manage-membership on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/minisante"
+      ],
+      "scopes": [
+        "manage-membership"
+      ],
+      "policies": [
+        "inst:minisante:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "minisante",
+      "name": "inst:minisante:institution-admin+institution-auditor+institution-hr:groups:view",
+      "description": "'minisante': view on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/minisante"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:minisante:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "minisante",
+      "name": "inst:minisante:institution-admin+institution-auditor+institution-hr:groups:view-members",
+      "description": "'minisante': view-members on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/minisante"
+      ],
+      "scopes": [
+        "view-members"
+      ],
+      "policies": [
+        "inst:minisante:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "minisante",
+      "name": "inst:minisante:institution-admin:roles:map-role",
+      "description": "'minisante': map-role on 2 Roles for tiers ['institution-admin'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:minisante:auditor",
+        "inst:minisante:hr"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:minisante:institution-admin"
+      ]
+    },
+    {
+      "institution": "minisante",
+      "name": "inst:minisante:institution-admin+institution-hr:roles:map-role",
+      "description": "'minisante': map-role on 1 Roles for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:minisante:staff"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:minisante:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "rdb",
+      "name": "inst:rdb:institution-admin:clients:manage",
+      "description": "'rdb': manage on 1 Clients for tiers ['institution-admin'].",
+      "resource_type": "Clients",
+      "resources": [
+        "rdb-portal"
+      ],
+      "scopes": [
+        "manage"
+      ],
+      "policies": [
+        "inst:rdb:institution-admin"
+      ]
+    },
+    {
+      "institution": "rdb",
+      "name": "inst:rdb:institution-admin+institution-auditor:clients:view",
+      "description": "'rdb': view on 1 Clients for tiers ['institution-admin', 'institution-auditor'].",
+      "resource_type": "Clients",
+      "resources": [
+        "rdb-portal"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:rdb:institution-admin+institution-auditor"
+      ]
+    },
+    {
+      "institution": "rdb",
+      "name": "inst:rdb:institution-admin+institution-hr:groups:manage-members",
+      "description": "'rdb': manage-members on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/rdb"
+      ],
+      "scopes": [
+        "manage-members"
+      ],
+      "policies": [
+        "inst:rdb:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "rdb",
+      "name": "inst:rdb:institution-admin+institution-hr:groups:manage-membership",
+      "description": "'rdb': manage-membership on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/rdb"
+      ],
+      "scopes": [
+        "manage-membership"
+      ],
+      "policies": [
+        "inst:rdb:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "rdb",
+      "name": "inst:rdb:institution-admin+institution-auditor+institution-hr:groups:view",
+      "description": "'rdb': view on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/rdb"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:rdb:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "rdb",
+      "name": "inst:rdb:institution-admin+institution-auditor+institution-hr:groups:view-members",
+      "description": "'rdb': view-members on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/rdb"
+      ],
+      "scopes": [
+        "view-members"
+      ],
+      "policies": [
+        "inst:rdb:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "rdb",
+      "name": "inst:rdb:institution-admin:roles:map-role",
+      "description": "'rdb': map-role on 2 Roles for tiers ['institution-admin'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:rdb:auditor",
+        "inst:rdb:hr"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:rdb:institution-admin"
+      ]
+    },
+    {
+      "institution": "rdb",
+      "name": "inst:rdb:institution-admin+institution-hr:roles:map-role",
+      "description": "'rdb': map-role on 1 Roles for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:rdb:staff"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:rdb:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "rra",
+      "name": "inst:rra:institution-admin:clients:manage",
+      "description": "'rra': manage on 1 Clients for tiers ['institution-admin'].",
+      "resource_type": "Clients",
+      "resources": [
+        "rra-myrra"
+      ],
+      "scopes": [
+        "manage"
+      ],
+      "policies": [
+        "inst:rra:institution-admin"
+      ]
+    },
+    {
+      "institution": "rra",
+      "name": "inst:rra:institution-admin+institution-auditor:clients:view",
+      "description": "'rra': view on 1 Clients for tiers ['institution-admin', 'institution-auditor'].",
+      "resource_type": "Clients",
+      "resources": [
+        "rra-myrra"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:rra:institution-admin+institution-auditor"
+      ]
+    },
+    {
+      "institution": "rra",
+      "name": "inst:rra:institution-admin+institution-hr:groups:manage-members",
+      "description": "'rra': manage-members on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/rra"
+      ],
+      "scopes": [
+        "manage-members"
+      ],
+      "policies": [
+        "inst:rra:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "rra",
+      "name": "inst:rra:institution-admin+institution-hr:groups:manage-membership",
+      "description": "'rra': manage-membership on 1 Groups for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/rra"
+      ],
+      "scopes": [
+        "manage-membership"
+      ],
+      "policies": [
+        "inst:rra:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "rra",
+      "name": "inst:rra:institution-admin+institution-auditor+institution-hr:groups:view",
+      "description": "'rra': view on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/rra"
+      ],
+      "scopes": [
+        "view"
+      ],
+      "policies": [
+        "inst:rra:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "rra",
+      "name": "inst:rra:institution-admin+institution-auditor+institution-hr:groups:view-members",
+      "description": "'rra': view-members on 1 Groups for tiers ['institution-admin', 'institution-auditor', 'institution-hr'].",
+      "resource_type": "Groups",
+      "resources": [
+        "/rra"
+      ],
+      "scopes": [
+        "view-members"
+      ],
+      "policies": [
+        "inst:rra:institution-admin+institution-auditor+institution-hr"
+      ]
+    },
+    {
+      "institution": "rra",
+      "name": "inst:rra:institution-admin:roles:map-role",
+      "description": "'rra': map-role on 2 Roles for tiers ['institution-admin'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:rra:auditor",
+        "inst:rra:hr"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:rra:institution-admin"
+      ]
+    },
+    {
+      "institution": "rra",
+      "name": "inst:rra:institution-admin+institution-hr:roles:map-role",
+      "description": "'rra': map-role on 1 Roles for tiers ['institution-admin', 'institution-hr'].",
+      "resource_type": "Roles",
+      "resources": [
+        "inst:rra:staff"
+      ],
+      "scopes": [
+        "map-role"
+      ],
+      "policies": [
+        "inst:rra:institution-admin+institution-hr"
+      ]
+    },
+    {
+      "institution": "_shared",
+      "name": "inst:_shared:users:map-roles",
+      "description": "Permits the role-mapping action; target and role are bounded elsewhere.",
+      "resource_type": "Users",
+      "resources": [
+        "*"
+      ],
+      "scopes": [
+        "map-roles"
+      ],
+      "policies": [
+        "inst:_shared:map-roles"
+      ]
+    }
+  ]
+}

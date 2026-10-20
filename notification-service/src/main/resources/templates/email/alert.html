@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head><meta charset="UTF-8"><title th:text="${ruleTitle}">Alert</title></head>
+<body style="font-family:sans-serif;max-width:600px">
+  <h2 th:style="'color:' + ${severityColor}">&#x26A0; SSO Alert: <span th:text="${ruleTitle}">Brute Force</span></h2>
+  <p><strong>Severity:</strong> <span th:style="'color:' + ${severityColor}" th:text="${severity}">CRITICAL</span></p>
+  <table border="1" cellspacing="0" style="border-collapse:collapse;width:100%">
+    <tr th:if="${userId != null}"><td style="padding:4px 8px;font-weight:bold">user</td><td style="padding:4px 8px" th:text="${userId}"></td></tr>
+    <tr th:if="${ipAddress != null}"><td style="padding:4px 8px;font-weight:bold">ip_address</td><td style="padding:4px 8px" th:text="${ipAddress}"></td></tr>
+    <tr th:if="${appId != null}"><td style="padding:4px 8px;font-weight:bold">app</td><td style="padding:4px 8px" th:text="${appId}"></td></tr>
+    <tr th:each="d : ${details}">
+      <td style="padding:4px 8px;font-weight:bold" th:text="${d.key}">key</td>
+      <td style="padding:4px 8px" th:text="${d.value}">value</td>
+    </tr>
+  </table>
+  <p style="color:#888;font-size:12px;margin-top:24px">
+    Government of Rwanda SSO — automated security alert<br>
+    Alert id: <span th:text="${alertId}"></span><br>
+    Do not reply to this message.
+  </p>
+</body>
+</html>

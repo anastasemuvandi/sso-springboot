@@ -1,0 +1,7 @@
+# Context is the repository root; only the seeder sources and the three config inputs.
+**
+!tools/seeder/pom.xml
+!tools/seeder/src/**
+!configs/institutions.yaml
+!configs/delegated-permissions/**
+!configs/generated/**

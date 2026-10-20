@@ -1,0 +1,5 @@
+# BuildKit: ignore file for notification-service/Dockerfile (context = repo root)
+*
+!pom.xml
+!notification-service/pom.xml
+!notification-service/src

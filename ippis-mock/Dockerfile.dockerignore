@@ -1,0 +1,5 @@
+# Context is the repository root; only the parent POM and this module are needed.
+**
+!pom.xml
+!ippis-mock/pom.xml
+!ippis-mock/src/main/**

@@ -1,0 +1,1152 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "description" : "Tamper-evident audit log with hash chain, CSV/PDF export, and service health monitoring. Every /audit/** route requires the X-Audit-API-Key header.",
+    "title" : "GoR SSO — Audit Service",
+    "version" : "1.0.0"
+  },
+  "servers" : [ {
+    "url" : "http://audit-service:8001",
+    "description" : "compose network"
+  } ],
+  "paths" : {
+    "/audit/events" : {
+      "get" : {
+        "description" : "Returns {total, limit, offset, items}.",
+        "operationId" : "list",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "event_type",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "category",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "app_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "realm",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Institution slug (ADR-0001). Exact match on the column.",
+          "in" : "query",
+          "name" : "institution",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "What was acted on — user id, client id, or role name.",
+          "in" : "query",
+          "name" : "target",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "severity",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100,
+            "maximum" : 1000,
+            "minimum" : 1
+          }
+        }, {
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "minimum" : 0
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "List events, newest first",
+        "tags" : [ "Events" ]
+      },
+      "post" : {
+        "description" : "Writers: the wrapper, the Keycloak listener. institution/target, when absent, are lifted from details.institution and details.target_user / details.target.",
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AuditEventCreate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuditEventRead"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Append one event to the hash chain",
+        "tags" : [ "Events" ]
+      }
+    },
+    "/audit/events/{user_id}" : {
+      "get" : {
+        "operationId" : "forUser",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 200,
+            "maximum" : 1000,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AuditEventRead"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Events of one user, newest first",
+        "tags" : [ "Events" ]
+      }
+    },
+    "/audit/export/csv" : {
+      "get" : {
+        "operationId" : "csv",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "event_type",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "category",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "app_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "realm",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "institution",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "target",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "severity",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 10000,
+            "maximum" : 50000,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "text/csv" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Export events as CSV (newest first)",
+        "tags" : [ "Export" ]
+      }
+    },
+    "/audit/export/pdf" : {
+      "get" : {
+        "operationId" : "pdf",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "event_type",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "category",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "app_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "realm",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "institution",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "target",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "severity",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 5000,
+            "maximum" : 20000,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Export events as a PDF table (newest first)",
+        "tags" : [ "Export" ]
+      }
+    },
+    "/audit/health/services" : {
+      "get" : {
+        "operationId" : "services",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50,
+            "maximum" : 500,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ServiceHealthRead"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Latest health snapshots of every monitored service",
+        "tags" : [ "Health & Reports" ]
+      }
+    },
+    "/audit/health/services/{service_name}" : {
+      "get" : {
+        "operationId" : "service",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "service_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100,
+            "maximum" : 1000,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ServiceHealthRead"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Health history of one service",
+        "tags" : [ "Health & Reports" ]
+      }
+    },
+    "/audit/integrity/verify" : {
+      "get" : {
+        "description" : "valid=false when any row's hash or prev_hash link fails, or (no to_date) when the newest row is not the recorded chain head.",
+        "operationId" : "verify",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "from_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IntegrityReport"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Recompute every hash in the window and check the links",
+        "tags" : [ "Integrity" ]
+      }
+    },
+    "/audit/reports/access-analytics" : {
+      "get" : {
+        "operationId" : "accessAnalytics",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "from_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AccessAnalytics"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Top apps, failed-login trend, access denials",
+        "tags" : [ "Health & Reports" ]
+      }
+    },
+    "/audit/reports/cert-expiry" : {
+      "get" : {
+        "operationId" : "certExpiry",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "days_ahead",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 90,
+            "maximum" : 365,
+            "minimum" : 1
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CertExpiryReport"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Certificates expiring within days_ahead days",
+        "tags" : [ "Health & Reports" ]
+      }
+    },
+    "/audit/reports/compliance" : {
+      "get" : {
+        "operationId" : "compliance",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "from_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to_date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Compliance report PDF (default: the last 30 days)",
+        "tags" : [ "Health & Reports" ]
+      }
+    },
+    "/audit/retention/apply" : {
+      "post" : {
+        "operationId" : "apply",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RetentionRunResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Run the retention purge now (also runs daily at 02:00 Africa/Kigali)",
+        "tags" : [ "Retention" ]
+      }
+    },
+    "/audit/retention/policies" : {
+      "get" : {
+        "operationId" : "policies",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RetentionPolicyRead"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Retention policies (default policy, category null, first)",
+        "tags" : [ "Retention" ]
+      }
+    },
+    "/audit/retention/policy" : {
+      "post" : {
+        "description" : "legal_hold=true exempts the category from every purge until it is lifted.",
+        "operationId" : "upsert",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RetentionPolicyCreate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RetentionPolicyRead"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "AuditApiKey" : [ ]
+        } ],
+        "summary" : "Create or replace the policy for one category (null = default); audited",
+        "tags" : [ "Retention" ]
+      }
+    },
+    "/health" : {
+      "get" : {
+        "operationId" : "health",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceStatus"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Liveness ping",
+        "tags" : [ "Health" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "AccessAnalytics" : {
+        "type" : "object",
+        "properties" : {
+          "failed_login_trend" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DayCount"
+            }
+          },
+          "top_apps" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AppAccessCount"
+            }
+          },
+          "total_access_denials" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "AppAccessCount" : {
+        "type" : "object",
+        "properties" : {
+          "access_count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "app_id" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AuditEventCreate" : {
+        "type" : "object",
+        "properties" : {
+          "app_id" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "details" : {
+            "type" : "object",
+            "additionalProperties" : { },
+            "description" : "Free-form JSON object (wrapper convention: details.outcome carries success/failure/denied)"
+          },
+          "employee_id" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "event_type" : {
+            "type" : "string",
+            "description" : "Dotted event type; the prefix decides the category (auth., authz., admin., lifecycle., session., cert.; anything else is UNKNOWN)",
+            "example" : "auth.login.success",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "institution" : {
+            "type" : "string",
+            "description" : "Institution slug (ADR-0001)",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "ip_address" : {
+            "type" : "string",
+            "maxLength" : 45,
+            "minLength" : 0
+          },
+          "performed_by" : {
+            "type" : "string",
+            "description" : "The actor",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "realm" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "severity" : {
+            "type" : "string",
+            "default" : "INFO",
+            "enum" : [ "INFO", "WARNING", "CRITICAL" ]
+          },
+          "target" : {
+            "type" : "string",
+            "description" : "What was acted on: user id, client id or role name",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "user_id" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "event_type" ]
+      },
+      "AuditEventRead" : {
+        "type" : "object",
+        "properties" : {
+          "app_id" : {
+            "type" : "string"
+          },
+          "category" : {
+            "type" : "string"
+          },
+          "created_at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "details" : {
+            "type" : "object",
+            "additionalProperties" : { }
+          },
+          "employee_id" : {
+            "type" : "string"
+          },
+          "event_hash" : {
+            "type" : "string"
+          },
+          "event_type" : {
+            "type" : "string"
+          },
+          "hash_version" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "institution" : {
+            "type" : "string"
+          },
+          "ip_address" : {
+            "type" : "string"
+          },
+          "performed_by" : {
+            "type" : "string"
+          },
+          "prev_hash" : {
+            "type" : "string"
+          },
+          "realm" : {
+            "type" : "string"
+          },
+          "severity" : {
+            "type" : "string"
+          },
+          "target" : {
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CertExpiryItem" : {
+        "type" : "object",
+        "properties" : {
+          "cert_expiry" : {
+            "type" : "string",
+            "description" : "YYYY-MM-DD"
+          },
+          "days_remaining" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "employee_id" : {
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CertExpiryReport" : {
+        "type" : "object",
+        "properties" : {
+          "days_ahead" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "expiring" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CertExpiryItem"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "DayCount" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "day" : {
+            "type" : "string",
+            "description" : "YYYY-MM-DD (UTC)"
+          }
+        }
+      },
+      "EventPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditEventRead"
+            }
+          },
+          "limit" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "offset" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "IntegrityReport" : {
+        "type" : "object",
+        "properties" : {
+          "checked_from" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "checked_to" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "first_tampered_at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "first_tampered_id" : {
+            "type" : "string"
+          },
+          "tail_matches_head" : {
+            "type" : "boolean",
+            "description" : "Full-to-now checks only: the newest row is the recorded chain head (false means rows were removed from the end of the trail)"
+          },
+          "tampered_count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "total_checked" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "valid" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "RetentionPolicyCreate" : {
+        "type" : "object",
+        "properties" : {
+          "category" : {
+            "type" : "string",
+            "description" : "Event category (AUTHENTICATION, ADMIN, ...); null = default policy",
+            "maxLength" : 50,
+            "minLength" : 0
+          },
+          "legal_hold" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "While true, nothing in this category is ever purged"
+          },
+          "retention_days" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          }
+        },
+        "required" : [ "retention_days" ]
+      },
+      "RetentionPolicyRead" : {
+        "type" : "object",
+        "properties" : {
+          "category" : {
+            "type" : "string"
+          },
+          "created_at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "legal_hold" : {
+            "type" : "boolean"
+          },
+          "retention_days" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "updated_at" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "RetentionRunResult" : {
+        "type" : "object",
+        "properties" : {
+          "deleted" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ServiceHealthRead" : {
+        "type" : "object",
+        "properties" : {
+          "checked_at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "details" : {
+            "type" : "object",
+            "additionalProperties" : { }
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "response_time_ms" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "service_name" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ServiceStatus" : {
+        "type" : "object",
+        "properties" : {
+          "service" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "AuditApiKey" : {
+        "in" : "header",
+        "name" : "X-Audit-API-Key",
+        "type" : "apiKey"
+      }
+    }
+  }
+}

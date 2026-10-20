@@ -1,0 +1,7 @@
+# Build context is the repo root; send only what the API image needs.
+*
+!pom.xml
+!sso-spring-boot-starter/pom.xml
+!sso-spring-boot-starter/src/**
+!sample-apps/api/pom.xml
+!sample-apps/api/src/**

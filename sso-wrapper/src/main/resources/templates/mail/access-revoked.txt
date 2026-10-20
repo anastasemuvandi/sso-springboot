@@ -1,0 +1,18 @@
+Hello [(${name})],
+
+Your access to the following applications through the Government of Rwanda
+single sign-on, for [(${institution})], has been removed:
+[# th:each="app : ${applications}"]  - [(${app})]
+[/][# th:if="${#lists.isEmpty(applications)}"]  (none)
+[/]
+  Username: [(${username})]
+
+Your account, your password and any other applications you use are unchanged.
+The next time you try to sign in to one of the applications above, you will
+not be let in.
+
+If you believe this is a mistake, contact your institution's SSO administrator.
+
+Nobody will ever ask you for your password. This message does not contain one.
+
+— Government of Rwanda SSO

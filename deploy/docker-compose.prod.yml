@@ -1,0 +1,201 @@
+# ---------------------------------------------------------------------------
+# Production overlay.
+#
+#   docker compose -p gorsso -f deploy/docker-compose.base.yml -f deploy/docker-compose.apps.yml \
+#                  -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d
+#
+# Differences from staging:
+#   * https-portal (Let's Encrypt) terminates TLS for the three public hostnames and is the only
+#     thing published; Keycloak trusts X-Forwarded-* from the compose network only.
+#   * COOKIE_SECURE=true, https everywhere, realm sslRequired should be `external` (Terraform).
+#   * Real IPPIS (IPPIS_SERVER_URL is required); the mock only runs with `--profile mock`.
+#   * Memory limits and rotated JSON logs per service.
+# Sizing (3 VMs): docs/runbooks/production-sizing.md. TLS: docs/runbooks/tls.md.
+#
+# EVERY SECRET IS ${VAR:?} (the same list as docker-compose.staging.yml, plus PROD_DOMAIN_* and
+# IPPIS_SERVER_URL). Start Keycloak on a FRESH database: booting 26.2 on a database written by an
+# older Keycloak migrates it irreversibly.
+# ---------------------------------------------------------------------------
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+x-prod:
+  keycloak-url: &kc-url https://${PROD_DOMAIN_KEYCLOAK:?set PROD_DOMAIN_KEYCLOAK}
+  wrapper-url: &wrapper-url https://${PROD_DOMAIN_SSO:?set PROD_DOMAIN_SSO}
+  console-url: &console-url https://${PROD_DOMAIN_ADMIN:?set PROD_DOMAIN_ADMIN}
+
+services:
+  https-portal:
+    image: steveltn/https-portal:1
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAINS: >-
+        ${PROD_DOMAIN_SSO:?set PROD_DOMAIN_SSO} -> http://wrapper:8000,
+        ${PROD_DOMAIN_ADMIN:?set PROD_DOMAIN_ADMIN} -> http://console-bff:3001,
+        ${PROD_DOMAIN_KEYCLOAK:?set PROD_DOMAIN_KEYCLOAK} -> http://keycloak:8080
+      STAGE: production
+      WEBSOCKET: "true"
+      CLIENT_MAX_BODY_SIZE: 32M
+      # Keycloak's auth headers exceed nginx's default buffers.
+      CUSTOM_NGINX_GLOBAL_HTTP_CONFIG_BLOCK: |
+        proxy_buffer_size       128k;
+        proxy_buffers           4   256k;
+        proxy_busy_buffers_size 256k;
+        large_client_header_buffers 4 32k;
+    volumes:
+      - https_portal_data:/var/lib/https-portal
+    depends_on:
+      - wrapper
+      - console-bff
+      - keycloak
+    logging: *logging
+
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:?set KC_DB_PASSWORD}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?set IDENTITY_DB_PASSWORD}
+      AUDIT_DB_PASSWORD: ${AUDIT_DB_PASSWORD:?set AUDIT_DB_PASSWORD}
+      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:?set NOTIFICATION_DB_PASSWORD}
+    ports: !reset []
+    deploy: { resources: { limits: { memory: 2G } } }
+    logging: *logging
+
+  redis:
+    ports: !reset []
+    deploy: { resources: { limits: { memory: 256M } } }
+    logging: *logging
+
+  keycloak:
+    entrypoint: !reset []
+    command: !reset []
+    mem_limit: ${KC_MEM_LIMIT:-3g}
+    ports: !reset []
+    volumes: !reset []
+    environment: !override
+      JAVA_OPTS_KC_HEAP: ${KC_JAVA_OPTS_KC_HEAP:--XX:MaxRAMPercentage=70 -XX:MinRAMPercentage=70 -XX:InitialRAMPercentage=50}
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:?set KC_DB_PASSWORD}
+      KC_HOSTNAME: *kc-url
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      # TLS ends at https-portal; only the compose network may set X-Forwarded-*.
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_PROXY_TRUSTED_ADDRESSES: ${KC_PROXY_TRUSTED_ADDRESSES:-172.16.0.0/12}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?set KC_ADMIN_PASSWORD}
+      KC_SPI_EVENTS_LISTENER_GORSSO_AUDIT_URL: http://audit-service:8001
+      KC_SPI_EVENTS_LISTENER_GORSSO_AUDIT_API_KEY: ${AUDIT_API_KEY:?set AUDIT_API_KEY}
+      GORSSO_ACCOUNT_SETUP_URL: https://${PROD_DOMAIN_SSO:?set PROD_DOMAIN_SSO}/account/setup-link
+    logging: *logging
+
+  seed:
+    profiles: ["seed"]
+    environment:
+      APP_ENV: prod
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?set KC_ADMIN_PASSWORD}
+      SSO_CLIENT_SECRET: ${SSO_CLIENT_SECRET:?set SSO_CLIENT_SECRET}
+      ADMIN_UI_CLIENT_SECRET: ${ADMIN_UI_CLIENT_SECRET:?set ADMIN_UI_CLIENT_SECRET}
+      WRAPPER_PUBLIC_URL: *wrapper-url
+      CONSOLE_PUBLIC_URLS: *console-url
+      SEED_INSTITUTIONS: none
+      SEED_SAMPLE_SPAS: none
+      SEED_DEMO_USERS: "false"
+      SEED_FGAP: "false"
+      SEED_REALM_SMTP_HOST: ""
+    volumes: !reset []
+
+  wrapper:
+    # (the dev-only seed-mirror profile is off)
+    ports: !reset []
+    environment:
+      SPRING_PROFILES_ACTIVE: ""
+      APP_ENV: prod
+      # Control plane + Keycloak built-ins only; the dev-only sample SPA exemption must not ship.
+      ACCESS_ENFORCEMENT_EXEMPT_CLIENTS: sso-client,sso-admin-ui,account,account-console,admin-cli,broker,realm-management,security-admin-console
+      API_BASE_URL: *wrapper-url
+      FORWARD_HEADERS_STRATEGY: framework
+      SECRET_KEY: ${WRAPPER_SECRET_KEY:?set WRAPPER_SECRET_KEY}
+      ACCESS_MATRIX_SIGNING_KEY: ${ACCESS_MATRIX_SIGNING_KEY:?set ACCESS_MATRIX_SIGNING_KEY}
+      ALLOWED_ORIGINS: https://${PROD_DOMAIN_ADMIN:?set PROD_DOMAIN_ADMIN},https://${PROD_DOMAIN_SSO:?set PROD_DOMAIN_SSO}
+      KEYCLOAK_PUBLIC_URL: *kc-url
+      KEYCLOAK_LOCAL_ISSUER: *kc-url
+      KEYCLOAK_CLIENT_SECRET: ${SSO_CLIENT_SECRET:?set SSO_CLIENT_SECRET}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?set KC_ADMIN_PASSWORD}
+      AUDIT_API_KEY: ${AUDIT_API_KEY:?set AUDIT_API_KEY}
+      IPPIS_BASE_URL: ${IPPIS_SERVER_URL:?set IPPIS_SERVER_URL (real IPPIS)}
+      IPPIS_API_KEY: ${IPPIS_API_KEY:?set IPPIS_API_KEY}
+      IPPIS_WEBHOOK_SECRET: ${IPPIS_WEBHOOK_SECRET:?set IPPIS_WEBHOOK_SECRET}
+      IPPIS_SYNC_SCHEDULE_ENABLED: ${IPPIS_SYNC_SCHEDULE_ENABLED:-true}
+      IDENTITY_DATABASE_PASSWORD: ${IDENTITY_DB_PASSWORD:?set IDENTITY_DB_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST:?set SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_AUTH: ${SMTP_AUTH:-true}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SSO_LOGIN_URL: *console-url
+    deploy: { resources: { limits: { memory: 1G } } }
+    logging: *logging
+
+  console-bff:
+    ports: !reset []
+    environment:
+      APP_ENV: prod
+      SSO_PUBLIC_URL: *wrapper-url
+      ADMIN_UI_CLIENT_SECRET: ${ADMIN_UI_CLIENT_SECRET:?set ADMIN_UI_CLIENT_SECRET}
+      ADMIN_UI_REDIRECT_URI: https://${PROD_DOMAIN_ADMIN:?set PROD_DOMAIN_ADMIN}/login/oauth2/code/sso-admin-ui
+      ADMIN_UI_POST_LOGOUT_REDIRECT_URI: https://${PROD_DOMAIN_ADMIN:?set PROD_DOMAIN_ADMIN}/
+      COOKIE_SECURE: "true"
+      BFF_FORWARD_HEADERS_STRATEGY: framework
+    deploy: { resources: { limits: { memory: 512M } } }
+    logging: *logging
+
+  audit-service:
+    ports: !reset []
+    environment:
+      APP_ENV: prod
+      AUDIT_API_KEY: ${AUDIT_API_KEY:?set AUDIT_API_KEY}
+      SPRING_DATASOURCE_PASSWORD: ${AUDIT_DB_PASSWORD:?set AUDIT_DB_PASSWORD}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?set KC_ADMIN_PASSWORD}
+    deploy: { resources: { limits: { memory: 768M } } }
+    logging: *logging
+
+  notification-service:
+    ports: !reset []
+    environment:
+      APP_ENV: prod
+      SPRING_PROFILES_ACTIVE: prod
+      NOTIFICATION_API_KEY: ${NOTIFICATION_API_KEY:?set NOTIFICATION_API_KEY}
+      NOTIFICATION_DATABASE_PASSWORD: ${NOTIFICATION_DB_PASSWORD:?set NOTIFICATION_DB_PASSWORD}
+      AUDIT_API_KEY: ${AUDIT_API_KEY:?set AUDIT_API_KEY}
+      SMTP_HOST: ${SMTP_HOST:?set SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_TLS: "true"
+    deploy: { resources: { limits: { memory: 512M } } }
+    logging: *logging
+
+  ippis-mock:
+    profiles: ["mock"]
+    ports: !reset []
+    environment:
+      IPPIS_API_KEY: ${IPPIS_API_KEY:?set IPPIS_API_KEY}
+      IPPIS_WEBHOOK_SECRET: ${IPPIS_WEBHOOK_SECRET:?set IPPIS_WEBHOOK_SECRET}
+
+  mailhog:
+    profiles: ["dev-only"]
+
+  adminer:
+    profiles: ["dev-only"]
+
+volumes:
+  https_portal_data:

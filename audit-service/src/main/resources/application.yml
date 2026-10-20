@@ -1,0 +1,95 @@
+# audit-service configuration. Environment variable names follow the reference
+# (audit-service/.env.example); every secret also accepts <NAME>_FILE.
+server:
+  port: ${PORT:8001}
+  shutdown: graceful
+  forward-headers-strategy: native
+
+spring:
+  application:
+    name: audit-service
+  threads:
+    virtual:
+      enabled: false
+  datasource:
+    # DATABASE_URL (reference SQLAlchemy form, postgresql+asyncpg://user:pass@host:5432/db) is
+    # translated into these by FileBackedSecretsPostProcessor; SPRING_DATASOURCE_* override.
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/sso_risa}
+    username: ${SPRING_DATASOURCE_USERNAME:user}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    hikari:
+      maximum-pool-size: ${DATABASE_POOL_SIZE:20}
+      pool-name: audit
+  flyway:
+    enabled: ${RUN_MIGRATIONS:true}
+    # Adopt a schema created by the Python service: baseline at 0 so V1+ still run (they are
+    # written with IF NOT EXISTS).
+    baseline-on-migrate: true
+    baseline-version: "0"
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+audit:
+  environment: ${APP_ENV:dev}
+  api-key: ${AUDIT_API_KEY:}
+  api-keys: ${AUDIT_API_KEYS:}
+  workers:
+    enabled: ${AUDIT_WORKERS_ENABLED:true}
+  health:
+    services: ${SERVICES_TO_MONITOR:keycloak,wrapper,admin-ui,postgresql,redis}
+    redis-url: ${REDIS_URL:}
+    timeout: ${HEALTH_CHECK_TIMEOUT:5s}
+    urls:
+      # Keycloak 26 serves health on the management port 9000.
+      keycloak: ${KEYCLOAK_HEALTH_URL:http://keycloak:9000/health/ready}
+      wrapper: ${WRAPPER_HEALTH_URL:${WRAPPER_URL:http://wrapper:8000}/actuator/health}
+      admin-ui: ${ADMIN_UI_HEALTH_URL:${ADMIN_UI_URL:http://console-bff:8080}/actuator/health}
+  keycloak:
+    server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
+    realm: ${KEYCLOAK_REALM:government-internal}
+    admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+    admin-password: ${KEYCLOAK_ADMIN_PASSWORD:}
+    admin-realm: ${KEYCLOAK_ADMIN_REALM:master}
+    admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli}
+  retention:
+    service-health-days: ${SERVICE_HEALTH_RETENTION_DAYS:90}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      group:
+        readiness:
+          include: readinessState,db
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: audit-service
+
+springdoc:
+  api-docs:
+    path: /openapi.json
+  swagger-ui:
+    path: /docs
+  default-produces-media-type: application/json
+  writer-with-order-by-keys: true
+
+logging:
+  structured:
+    format:
+      console: ${LOG_FORMAT:logstash}
+  level:
+    root: ${LOG_LEVEL:INFO}

@@ -1,0 +1,22 @@
+# openapi-generator config — TypeScript (fetch) client SDK for the GoRSSO wrapper API.
+# Ported from the reference configs/sdk/nodejs-config.yaml (package metadata, ES6, promises),
+# retargeted from the untyped "javascript" generator to "typescript-fetch" (works in browsers
+# and Node 18+ with the built-in fetch). Used by sdk/generate.sh.
+# generator: typescript-fetch (selected by sdk/generate.sh)
+npmName: "@gorsso/client"
+npmVersion: 1.0.0
+npmRepository: "https://github.com/gov-rw/gorsso"
+projectName: gorsso-client
+projectDescription: "Official TypeScript SDK for the Government of Rwanda Single Sign-On (GoRSSO) wrapper API"
+licenseName: MIT
+supportsES6: "true"
+typescriptThreePlus: "true"
+withInterfaces: "true"
+useSingleRequestParameter: "true"
+stringEnums: "true"
+hideGenerationTimestamp: "true"
+sortParamsByRequiredFlag: "true"
+ensureUniqueParams: "true"
+allowUnicodeIdentifiers: "false"
+prependFormOrBodyParameters: "false"
+legacyDiscriminatorBehavior: "false"

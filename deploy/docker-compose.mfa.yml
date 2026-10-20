@@ -1,0 +1,53 @@
+# ---------------------------------------------------------------------------
+# TOTP (MFA) overlay on the dev stack. docs/runbooks/enable-mfa-totp.md
+#
+#   docker compose -p gorsso -f deploy/docker-compose.base.yml -f deploy/docker-compose.apps.yml \
+#                  -f deploy/docker-compose.mfa.yml up -d
+#
+# The Keycloak image already carries what the `browser-totp` flow needs (gorsso-mfa providers,
+# `recovery-codes` feature, gorsso-audit listener). This overlay adds the one-shot `mfa-install`
+# job: the wrapper's offline installer (`java -jar sso-wrapper.jar mfa-install`), which builds and
+# binds `browser-totp`, the mfa-exempt role, required actions, the acr.loa.map and the event
+# listener through the Admin API. It writes the mode ONLY when unset (as `off`); the super admin
+# turns enforcement on with PUT /realm/mfa. Terraform (`enable_mfa_totp = true`) is the equivalent
+# for managed environments; the two produce the same flow (tested in mfa-policy).
+# ---------------------------------------------------------------------------
+
+services:
+  keycloak:
+    environment:
+      # Themes served from disk (no cache) so the TOTP pages can be iterated on.
+      KC_SPI_THEME_CACHE_THEMES: "false"
+      KC_SPI_THEME_CACHE_TEMPLATES: "false"
+
+  mfa-install:
+    image: ${REGISTRY:-gorsso}/sso-wrapper:${TAG:-dev}
+    restart: "no"
+    command: ["mfa-install"]
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_PUBLIC_URL: ${PUBLIC_KEYCLOAK_URL:-http://localhost:${HOST_PORT_KEYCLOAK:-8080}}
+      KEYCLOAK_LOCAL_ISSUER: ${PUBLIC_KEYCLOAK_URL:-http://localhost:${HOST_PORT_KEYCLOAK:-8080}}
+      KEYCLOAK_REALM: government-internal
+      KEYCLOAK_CLIENT_ID: sso-client
+      KEYCLOAK_CLIENT_SECRET: ${SSO_CLIENT_SECRET:-gorsso-dev-sso-client}
+      KEYCLOAK_ADMIN_USERNAME: ${KC_ADMIN_USERNAME:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
+      SECRET_KEY: ${WRAPPER_SECRET_KEY:-gorsso-dev-wrapper-secret-key-not-for-production-000000}
+      ACCESS_MATRIX_SIGNING_KEY: ${ACCESS_MATRIX_SIGNING_KEY:-gorsso-dev-access-matrix-signing-key-0000}
+      AUDIT_SERVICE_URL: http://audit-service:8001
+      AUDIT_API_KEY: ${AUDIT_API_KEY:-gorsso-dev-audit-key}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+        required: false
+
+  wrapper:
+    depends_on:
+      mfa-install:
+        condition: service_completed_successfully

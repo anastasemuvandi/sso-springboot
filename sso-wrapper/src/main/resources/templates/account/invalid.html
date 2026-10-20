@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${lang}">
+<head th:replace="~{account/layout :: head}"></head>
+<body>
+<div class="page">
+  <header th:replace="~{account/layout :: brand}"></header>
+  <main class="card">
+    <h1 th:text="${t.invalid_title}">This link can no longer be used</h1>
+    <p th:text="${t.invalid}">This link can no longer be used...</p>
+    <p><a class="button-link" th:href="${resendUrl}" th:text="${t.new_link}">Ask for a new link</a></p>
+  </main>
+  <footer th:replace="~{account/layout :: footer}"></footer>
+</div>
+</body>
+</html>

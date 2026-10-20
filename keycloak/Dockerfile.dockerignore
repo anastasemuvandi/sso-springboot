@@ -1,0 +1,15 @@
+# BuildKit reads <Dockerfile>.dockerignore next to the Dockerfile; the context is the repo root.
+# Allow-list: only what keycloak/Dockerfile copies.
+*
+!pom.xml
+!mfa-policy/
+!keycloak-extensions/
+!keycloak-theme/
+!configs/realms/
+!keycloak/Dockerfile
+**/target/
+**/node_modules/
+keycloak-theme/dist/
+keycloak-theme/dist_keycloak/
+**/.idea/
+**/*.iml

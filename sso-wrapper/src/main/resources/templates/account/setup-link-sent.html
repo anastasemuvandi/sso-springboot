@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${lang}">
+<head th:replace="~{account/layout :: head}"></head>
+<body>
+<div class="page">
+  <header th:replace="~{account/layout :: brand}"></header>
+  <main class="card">
+    <h1 th:text="${t.done_title}">Check your email</h1>
+    <p class="notice" th:text="${t.done}">If that address belongs to an account...</p>
+    <p th:text="${t.again}">Didn't arrive? You can ask again in 5 minutes.</p>
+    <p th:replace="~{account/layout :: back}"></p>
+  </main>
+  <footer th:replace="~{account/layout :: footer}"></footer>
+</div>
+</body>
+</html>

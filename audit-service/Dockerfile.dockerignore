@@ -1,0 +1,5 @@
+# Context is the repository root; only the parent POM and this module are needed.
+**
+!pom.xml
+!audit-service/pom.xml
+!audit-service/src/main/**

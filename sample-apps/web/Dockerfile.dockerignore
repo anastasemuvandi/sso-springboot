@@ -1,0 +1,6 @@
+# Build context is the repo root; send only the SDK and the SPA sources.
+*
+!sdk/react/**
+!sample-apps/web/**
+**/node_modules
+**/dist

@@ -1,0 +1,11 @@
+# Context is the repository root. Allow-list: parent POM, mfa-policy, the wrapper, the configs it reads.
+**
+!pom.xml
+!mfa-policy/pom.xml
+!mfa-policy/src/main/**
+!sso-wrapper/pom.xml
+!sso-wrapper/openapi.json
+!sso-wrapper/src/main/**
+!configs/institutions.yaml
+!configs/delegated-permissions/**
+!configs/generated/**

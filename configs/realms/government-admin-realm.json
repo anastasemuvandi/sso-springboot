@@ -1,0 +1,112 @@
+{
+  "realm": "government-admin",
+  "displayName": "Government Admin - System Administration",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "rememberMe": false,
+  "verifyEmail": true,
+  "loginWithEmailAllowed": false,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 5,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "en",
+    "rw"
+  ],
+  "defaultLocale": "en",
+  "loginTheme": "gor-admin",
+  "accessTokenLifespan": 180,
+  "ssoSessionIdleTimeout": 600,
+  "ssoSessionMaxLifespan": 7200,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+  "eventsEnabled": true,
+  "eventsExpiration": 7776000,
+  "eventsListeners": [
+    "jboss-logging"
+  ],
+  "enabledEventTypes": [
+    "LOGIN",
+    "LOGIN_ERROR",
+    "LOGOUT",
+    "LOGOUT_ERROR",
+    "REFRESH_TOKEN",
+    "REFRESH_TOKEN_ERROR",
+    "CODE_TO_TOKEN",
+    "CODE_TO_TOKEN_ERROR",
+    "INTROSPECT_TOKEN",
+    "INTROSPECT_TOKEN_ERROR",
+    "USER_INFO_REQUEST",
+    "USER_INFO_REQUEST_ERROR",
+    "CLIENT_LOGIN",
+    "CLIENT_LOGIN_ERROR",
+    "REVOKE_GRANT"
+  ],
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": true,
+  "webAuthnPolicyRpEntityName": "GoR SSO Admin",
+  "webAuthnPolicySignatureAlgorithms": [
+    "ES256",
+    "RS256"
+  ],
+  "webAuthnPolicyUserVerificationRequirement": "required",
+  "clients": [
+    {
+      "clientId": "admin-console",
+      "name": "Admin Console Access",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "admin-secret-key",
+      "redirectUris": [
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080"
+      ],
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "sys_admin",
+      "email": "admin@gov.rw",
+      "emailVerified": true,
+      "firstName": "System",
+      "lastName": "Administrator",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Admin@2024#Secure",
+          "temporary": true
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "system_admin",
+        "description": "Full system administrator"
+      },
+      {
+        "name": "security_admin",
+        "description": "Security administrator"
+      }
+    ]
+  },
+  "passwordPolicy": "length(10) and upperCase(1) and lowerCase(1) and digits(1)",
+  "maxTemporaryLockouts": 0,
+  "bruteForceStrategy": "MULTIPLE",
+  "waitIncrementSeconds": 900,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 900,
+  "quickLoginCheckMilliSeconds": 0,
+  "maxDeltaTimeSeconds": 43200
+}

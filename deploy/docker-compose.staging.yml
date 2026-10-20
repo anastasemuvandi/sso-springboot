@@ -1,0 +1,151 @@
+# ---------------------------------------------------------------------------
+# Staging overlay (plain HTTP on one host, no proxy; put the TLS overlay/proxy in front per
+# docs/runbooks/tls.md when it exists).
+#
+#   docker compose -p gorsso -f deploy/docker-compose.base.yml -f deploy/docker-compose.apps.yml \
+#                  -f deploy/docker-compose.staging.yml --env-file deploy/.env up -d
+#
+# EVERY SECRET IS ${VAR:?}: Compose interpolates the base files with the same .env, so a variable
+# missing here would otherwise fall back silently to a dev default. Required:
+#   POSTGRES_PASSWORD KC_DB_PASSWORD IDENTITY_DB_PASSWORD AUDIT_DB_PASSWORD NOTIFICATION_DB_PASSWORD
+#   KC_ADMIN_PASSWORD SSO_CLIENT_SECRET ADMIN_UI_CLIENT_SECRET AUDIT_API_KEY IPPIS_API_KEY
+#   IPPIS_WEBHOOK_SECRET NOTIFICATION_API_KEY WRAPPER_SECRET_KEY ACCESS_MATRIX_SIGNING_KEY
+#   STAGING_HOST (the address browsers use, e.g. 10.10.73.8)
+#
+# KEYCLOAK. `start --optimized --import-realm` (the image's ENTRYPOINT). Its `environment:` is
+# REPLACED (`!override`), not merged: the base file sets KC_DB / KC_FEATURES / KC_HEALTH_ENABLED /
+# KC_METRICS_ENABLED for start-dev, and an optimized server refuses build options at runtime.
+#
+# ONBOARDING is Terraform (make tf-apply TF_ENV=staging), not the seeder. The seeder is off here
+# (profile `seed`); `docker compose ... --profile seed run --rm seed` creates ONLY the control-plane
+# clients (SEED_INSTITUTIONS=none, no demo users; the seeder refuses demo users outside dev).
+# ---------------------------------------------------------------------------
+
+x-staging:
+  keycloak-url: &kc-url http://${STAGING_HOST:?set STAGING_HOST}:${HOST_PORT_KEYCLOAK:-8080}
+  wrapper-url: &wrapper-url http://${STAGING_HOST:?set STAGING_HOST}:${HOST_PORT_WRAPPER:-8000}
+  console-url: &console-url http://${STAGING_HOST:?set STAGING_HOST}:${HOST_PORT_CONSOLE:-3001}
+
+services:
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:?set KC_DB_PASSWORD}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?set IDENTITY_DB_PASSWORD}
+      AUDIT_DB_PASSWORD: ${AUDIT_DB_PASSWORD:?set AUDIT_DB_PASSWORD}
+      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:?set NOTIFICATION_DB_PASSWORD}
+    ports: !override
+      # Loopback only: published so psql works over SSH.
+      - "127.0.0.1:${HOST_PORT_POSTGRES:-5435}:5432"
+
+  redis:
+    ports: !reset []
+
+  keycloak:
+    entrypoint: !reset []
+    command: !reset []
+    mem_limit: ${KC_MEM_LIMIT:-2g}
+    # Realms are baked into the image (keycloak/Dockerfile); no bind mount.
+    volumes: !reset []
+    environment: !override
+      JAVA_OPTS_KC_HEAP: ${KC_JAVA_OPTS_KC_HEAP:--XX:MaxRAMPercentage=70 -XX:MinRAMPercentage=70 -XX:InitialRAMPercentage=50}
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:?set KC_DB_PASSWORD}
+      KC_HOSTNAME: *kc-url
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HTTP_ENABLED: "true"
+      # No proxy in front on plain-http staging: do NOT trust X-Forwarded-* (anyone could set iss).
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?set KC_ADMIN_PASSWORD}
+      KC_SPI_EVENTS_LISTENER_GORSSO_AUDIT_URL: http://audit-service:8001
+      KC_SPI_EVENTS_LISTENER_GORSSO_AUDIT_API_KEY: ${AUDIT_API_KEY:?set AUDIT_API_KEY}
+      GORSSO_ACCOUNT_SETUP_URL: http://${STAGING_HOST:?set STAGING_HOST}:${HOST_PORT_WRAPPER:-8000}/account/setup-link
+
+  seed:
+    profiles: ["seed"]
+    environment:
+      APP_ENV: staging
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?set KC_ADMIN_PASSWORD}
+      SSO_CLIENT_SECRET: ${SSO_CLIENT_SECRET:?set SSO_CLIENT_SECRET}
+      ADMIN_UI_CLIENT_SECRET: ${ADMIN_UI_CLIENT_SECRET:?set ADMIN_UI_CLIENT_SECRET}
+      WRAPPER_PUBLIC_URL: *wrapper-url
+      CONSOLE_PUBLIC_URLS: *console-url
+      SEED_INSTITUTIONS: none
+      SEED_SAMPLE_SPAS: none
+      SEED_DEMO_USERS: "false"
+      SEED_FGAP: "false"
+      SEED_REALM_SMTP_HOST: ""
+    volumes: !reset []
+
+  wrapper:
+    # (the dev-only seed-mirror profile is off)
+    environment:
+      SPRING_PROFILES_ACTIVE: ""
+      # Control plane + Keycloak built-ins only; the dev-only sample SPA exemption must not ship.
+      ACCESS_ENFORCEMENT_EXEMPT_CLIENTS: sso-client,sso-admin-ui,account,account-console,admin-cli,broker,realm-management,security-admin-console
+      APP_ENV: staging
+      API_BASE_URL: *wrapper-url
+      SECRET_KEY: ${WRAPPER_SECRET_KEY:?set WRAPPER_SECRET_KEY}
+      ACCESS_MATRIX_SIGNING_KEY: ${ACCESS_MATRIX_SIGNING_KEY:?set ACCESS_MATRIX_SIGNING_KEY}
+      ALLOWED_ORIGINS: http://${STAGING_HOST:?set STAGING_HOST}:${HOST_PORT_CONSOLE:-3001},http://${STAGING_HOST:?set STAGING_HOST}:${HOST_PORT_WRAPPER:-8000}
+      KEYCLOAK_PUBLIC_URL: *kc-url
+      KEYCLOAK_LOCAL_ISSUER: *kc-url
+      KEYCLOAK_CLIENT_SECRET: ${SSO_CLIENT_SECRET:?set SSO_CLIENT_SECRET}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?set KC_ADMIN_PASSWORD}
+      AUDIT_API_KEY: ${AUDIT_API_KEY:?set AUDIT_API_KEY}
+      IPPIS_API_KEY: ${IPPIS_API_KEY:?set IPPIS_API_KEY}
+      IPPIS_WEBHOOK_SECRET: ${IPPIS_WEBHOOK_SECRET:?set IPPIS_WEBHOOK_SECRET}
+      IDENTITY_DATABASE_PASSWORD: ${IDENTITY_DB_PASSWORD:?set IDENTITY_DB_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_AUTH: ${SMTP_AUTH:-true}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SSO_LOGIN_URL: *console-url
+
+  console-bff:
+    environment:
+      APP_ENV: staging
+      SSO_PUBLIC_URL: *wrapper-url
+      ADMIN_UI_CLIENT_SECRET: ${ADMIN_UI_CLIENT_SECRET:?set ADMIN_UI_CLIENT_SECRET}
+      ADMIN_UI_REDIRECT_URI: http://${STAGING_HOST:?set STAGING_HOST}:${HOST_PORT_CONSOLE:-3001}/login/oauth2/code/sso-admin-ui
+      ADMIN_UI_POST_LOGOUT_REDIRECT_URI: http://${STAGING_HOST:?set STAGING_HOST}:${HOST_PORT_CONSOLE:-3001}/
+      # Plain HTTP: a Secure cookie would be dropped and login would loop. True once TLS lands.
+      COOKIE_SECURE: "false"
+
+  audit-service:
+    environment:
+      APP_ENV: staging
+      AUDIT_API_KEY: ${AUDIT_API_KEY:?set AUDIT_API_KEY}
+      SPRING_DATASOURCE_PASSWORD: ${AUDIT_DB_PASSWORD:?set AUDIT_DB_PASSWORD}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?set KC_ADMIN_PASSWORD}
+    ports: !override
+      - "127.0.0.1:${HOST_PORT_AUDIT:-8001}:8001"
+
+  notification-service:
+    environment:
+      APP_ENV: staging
+      SPRING_PROFILES_ACTIVE: staging
+      NOTIFICATION_API_KEY: ${NOTIFICATION_API_KEY:?set NOTIFICATION_API_KEY}
+      NOTIFICATION_DATABASE_PASSWORD: ${NOTIFICATION_DB_PASSWORD:?set NOTIFICATION_DB_PASSWORD}
+      AUDIT_API_KEY: ${AUDIT_API_KEY:?set AUDIT_API_KEY}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_USE_TLS: "true"
+    ports: !override
+      - "127.0.0.1:${HOST_PORT_NOTIFICATION:-8002}:8002"
+
+  ippis-mock:
+    environment:
+      IPPIS_API_KEY: ${IPPIS_API_KEY:?set IPPIS_API_KEY}
+      IPPIS_WEBHOOK_SECRET: ${IPPIS_WEBHOOK_SECRET:?set IPPIS_WEBHOOK_SECRET}
+    ports: !override
+      - "127.0.0.1:${HOST_PORT_IPPIS:-8003}:8002"
+
+  mailhog:
+    profiles: ["dev-only"]
+
+  adminer:
+    profiles: ["dev-only"]

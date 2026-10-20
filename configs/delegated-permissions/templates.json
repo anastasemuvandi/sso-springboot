@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "description": [
+    "Delegated (institution / local) admin permission templates — ADR-0001 §4.",
+    "",
+    "This file is the SOURCE OF TRUTH for what an institution admin may do. It is",
+    "read at runtime by app/core/delegated_permissions.py (which renders a template",
+    "for one institution slug and enforces it on every /institution-admin/* call)",
+    "and applied to Keycloak by scripts/apply_delegated_permissions.py.",
+    "",
+    "Onboarding an institution is therefore: add its slug to `assignments`, run the",
+    "script. No clicking in the Keycloak admin console, ever — a console-made grant",
+    "is invisible to this file and will be reported by the guardrail audit.",
+    "",
+    "Placeholders: `{slug}` is substituted with the institution's canonical",
+    "lowercase slug (ADR-0001 §5.1) when a template is rendered.",
+    "",
+    "Capability vocabulary deliberately mirrors Keycloak's fine-grained admin",
+    "permission scopes (view-members / manage-members / manage-membership /",
+    "map-roles / view-clients / manage-clients) so that if this platform ever moves",
+    "to native FGAP, these templates translate 1:1 instead of being re-invented."
+  ],
+
+  "guardrail": {
+    "description": [
+      "The rule that keeps delegation safe: an institution admin is NEVER granted a",
+      "broad admin role, because a broad role talks to Keycloak directly and so",
+      "bypasses every fine-grained check expressed below.",
+      "",
+      "Enforced in three places:",
+      "  1. Config load — a template whose allow-patterns could match a forbidden",
+      "     role is rejected outright (see also the structural rules in",
+      "     app/core/delegated_permissions.py: allow-patterns must stay inside the",
+      "     institution's own namespace).",
+      "  2. Request time — a caller who holds any forbidden role AND an institution",
+      "     grant is refused (403) rather than silently over-served.",
+      "  3. Audit time — scripts/apply_delegated_permissions.py --check-only walks",
+      "     every institution admin in Keycloak and exits non-zero on a violation,",
+      "     so it can gate CI / a deployment pipeline.",
+      "",
+      "`realm-management: [\"*\"]` means NO realm-management client role at all — not",
+      "even view-users/query-users, which would let a local admin read the whole",
+      "realm and defeat the mandatory institution filter.",
+      "",
+      "`forbidden_realm_roles` lists the platform tiers (admin/super_admin/...) AND",
+      "the realm-management role names. The latter are normally CLIENT roles, caught",
+      "by the rule below; they are repeated here because a realm role created with",
+      "one of those names — or a composite that exposes it — confers the same power",
+      "and ADR-0001 §4 names manage-users explicitly."
+    ],
+    "forbidden_realm_roles": [
+      "admin",
+      "super_admin",
+      "system_admin",
+      "realm_admin",
+      "realm-admin",
+      "manage-users",
+      "manage-realm",
+      "manage-clients",
+      "manage-authorization",
+      "view-users",
+      "query-users"
+    ],
+    "forbidden_client_roles": {
+      "realm-management": ["*"]
+    }
+  },
+
+  "assignments": {
+    "description": [
+      "Which templates are enabled for which institution. `default` applies to any",
+      "institution not listed in `by_institution`. Listing an institution with a",
+      "shorter list is how you withhold a tier (e.g. an institution that may not",
+      "have local auditors)."
+    ],
+    "default": ["institution-admin", "institution-hr", "institution-auditor"],
+    "by_institution": {}
+  },
+
+  "templates": {
+    "institution-admin": {
+      "display_name": "Institution administrator",
+      "description": [
+        "The full local admin for one institution: manages its people, assigns its",
+        "own namespaced roles, and controls which of its own apps its staff may",
+        "log in to. Holds no Keycloak admin role — every action is executed by the",
+        "wrapper's service account after this template has authorised it.",
+        "",
+        "`roles.deny` withholds inst:{slug}:admin: appointing another local admin",
+        "stays a platform-admin action, so delegation cannot become",
+        "self-perpetuating. Set it to [] if co-admin appointment should be",
+        "delegated to the institution."
+      ],
+      "grant_role": "inst:{slug}:admin",
+      "capabilities": [
+        "view-members",
+        "manage-members",
+        "manage-membership",
+        "map-roles",
+        "view-clients",
+        "manage-clients"
+      ],
+      "members": {
+        "group": "/{slug}",
+        "include_subgroups": true
+      },
+      "roles": {
+        "allow": ["inst:{slug}:*"],
+        "deny": ["inst:{slug}:admin"]
+      },
+      "clients": {
+        "allow": ["{slug}-*"],
+        "deny": []
+      },
+      "provision": {
+        "roles": ["admin", "hr", "staff"]
+      }
+    },
+
+    "institution-hr": {
+      "display_name": "Institution HR officer",
+      "description": [
+        "People management without app or privilege management: joiner/mover/leaver",
+        "for the institution's staff, and the staff role only. Cannot touch client",
+        "access, cannot grant hr or admin."
+      ],
+      "grant_role": "inst:{slug}:hr",
+      "capabilities": [
+        "view-members",
+        "manage-members",
+        "manage-membership",
+        "map-roles"
+      ],
+      "members": {
+        "group": "/{slug}",
+        "include_subgroups": true
+      },
+      "roles": {
+        "allow": ["inst:{slug}:staff"],
+        "deny": []
+      },
+      "clients": {
+        "allow": [],
+        "deny": []
+      },
+      "provision": {
+        "roles": ["hr", "staff"]
+      }
+    },
+
+    "institution-auditor": {
+      "display_name": "Institution auditor",
+      "description": [
+        "Read-only visibility into the institution's own members and apps. Grants",
+        "no write capability at all — useful for internal audit and for service",
+        "desks that must look up staff without being able to change anything."
+      ],
+      "grant_role": "inst:{slug}:auditor",
+      "capabilities": ["view-members", "view-clients"],
+      "members": {
+        "group": "/{slug}",
+        "include_subgroups": true
+      },
+      "roles": {
+        "allow": [],
+        "deny": []
+      },
+      "clients": {
+        "allow": ["{slug}-*"],
+        "deny": []
+      },
+      "provision": {
+        "roles": ["auditor"]
+      }
+    }
+  }
+}

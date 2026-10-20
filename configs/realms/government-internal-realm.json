@@ -1,0 +1,1018 @@
+{
+  "realm": "government-internal",
+  "displayName": "Government Internal - Staff Portal",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "rememberMe": false,
+  "verifyEmail": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "failureFactor": 5,
+  "waitIncrementSeconds": 900,
+  "maxFailureWaitSeconds": 900,
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyDigits": 6,
+  "otpPolicyPeriod": 30,
+  "otpPolicyLookAheadWindow": 1,
+  "attributes": {
+    "mfa_totp_mode": "all",
+    "acr.loa.map": "{\"1\":1,\"2\":2}"
+  },
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "en",
+    "rw"
+  ],
+  "defaultLocale": "en",
+  "loginTheme": "government-citizens",
+  "accessTokenLifespan": 900,
+  "ssoSessionIdleTimeout": 900,
+  "ssoSessionMaxLifespan": 28800,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+  "eventsEnabled": true,
+  "eventsExpiration": 7776000,
+  "eventsListeners": [
+    "jboss-logging"
+  ],
+  "enabledEventTypes": [
+    "LOGIN",
+    "LOGIN_ERROR",
+    "LOGOUT",
+    "LOGOUT_ERROR",
+    "REGISTER",
+    "REGISTER_ERROR",
+    "UPDATE_PASSWORD",
+    "UPDATE_PASSWORD_ERROR",
+    "UPDATE_TOTP",
+    "REMOVE_TOTP",
+    "REFRESH_TOKEN",
+    "REFRESH_TOKEN_ERROR",
+    "CODE_TO_TOKEN",
+    "CODE_TO_TOKEN_ERROR",
+    "INTROSPECT_TOKEN",
+    "INTROSPECT_TOKEN_ERROR",
+    "USER_INFO_REQUEST",
+    "USER_INFO_REQUEST_ERROR",
+    "TOKEN_EXCHANGE",
+    "TOKEN_EXCHANGE_ERROR",
+    "CLIENT_LOGIN",
+    "CLIENT_LOGIN_ERROR",
+    "REVOKE_GRANT",
+    "PERMISSION_TOKEN"
+  ],
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": true,
+  "webAuthnPolicyRpEntityName": "GoR SSO",
+  "webAuthnPolicySignatureAlgorithms": [
+    "ES256",
+    "RS256"
+  ],
+  "webAuthnPolicyRpId": "",
+  "webAuthnPolicyAttestationConveyancePreference": "not specified",
+  "webAuthnPolicyAuthenticatorAttachment": "not specified",
+  "webAuthnPolicyRequireResidentKey": "not specified",
+  "webAuthnPolicyUserVerificationRequirement": "preferred",
+  "webAuthnPolicyCreateTimeout": 0,
+  "webAuthnPolicyAvoidSameAuthenticatorRegister": false,
+  "passwordPolicy": "length(10) and upperCase(1) and lowerCase(1) and digits(1)",
+  "roles": {
+    "realm": [
+      {
+        "name": "super_admin",
+        "description": "Highest-tier wrapper RBAC role (matches src/app/core/rbac.py SystemRole.SUPER_ADMIN)"
+      },
+      {
+        "name": "admin",
+        "description": "Administrator with full access"
+      },
+      {
+        "name": "employee",
+        "description": "Basic employee role"
+      },
+      {
+        "name": "contractor",
+        "description": "Contractor role"
+      },
+      {
+        "name": "gov-admin",
+        "description": "Government administrator"
+      },
+      {
+        "name": "auditor",
+        "description": "Auditor across systems"
+      },
+      {
+        "name": "citizen",
+        "description": "Citizen accessing public services"
+      }
+    ],
+    "client": {
+      "kubaka-web": [
+        {
+          "name": "landowner",
+          "description": "Landowner role"
+        },
+        {
+          "name": "architect",
+          "description": "Architect role"
+        },
+        {
+          "name": "permit-officer",
+          "description": "Permit Officer role"
+        },
+        {
+          "name": "planner",
+          "description": "Planner role"
+        }
+      ],
+      "rdb-portal": [
+        {
+          "name": "investor",
+          "description": "Investor role"
+        },
+        {
+          "name": "rdb-staff",
+          "description": "RDB Staff role"
+        },
+        {
+          "name": "tourism-operator",
+          "description": "Tourism Operator role"
+        },
+        {
+          "name": "government-official",
+          "description": "Government Official role"
+        }
+      ],
+      "myrra-portal": [
+        {
+          "name": "taxpayer",
+          "description": "Taxpayer role"
+        },
+        {
+          "name": "rra-officer",
+          "description": "RRA Officer role"
+        },
+        {
+          "name": "finance-official",
+          "description": "Finance Official role"
+        }
+      ],
+      "hmis-portal": [
+        {
+          "name": "clinician",
+          "description": "Clinician role"
+        },
+        {
+          "name": "data-manager",
+          "description": "Data Manager role"
+        },
+        {
+          "name": "chws",
+          "description": "Community Health Worker role"
+        },
+        {
+          "name": "health-planner",
+          "description": "Health Planner role"
+        }
+      ],
+      "ippis-portal": [
+        {
+          "name": "public-servant",
+          "description": "Public Servant role"
+        },
+        {
+          "name": "hr-officer",
+          "description": "HR Officer role"
+        },
+        {
+          "name": "payroll-officer",
+          "description": "Payroll Officer role"
+        },
+        {
+          "name": "management-official",
+          "description": "Management Official role"
+        }
+      ],
+      "irembo-portal": [
+        {
+          "name": "service-user",
+          "description": "Service User role"
+        },
+        {
+          "name": "admin",
+          "description": "Admin role"
+        }
+      ],
+      "minagri": [
+        {
+          "name": "farmer",
+          "description": "Farmer role"
+        },
+        {
+          "name": "agricultural-officer",
+          "description": "Agricultural Officer role"
+        },
+        {
+          "name": "crop-inspector",
+          "description": "Crop Inspector role"
+        },
+        {
+          "name": "export-coordinator",
+          "description": "Export Coordinator role"
+        }
+      ]
+    }
+  },
+  "defaultRoles": [
+    "employee"
+  ],
+  "groups": [
+    {
+      "name": "MININFRA",
+      "realmRoles": [
+        "employee",
+        "citizen",
+        "auditor"
+      ],
+      "clientRoles": {
+        "kubaka-web": [
+          "landowner",
+          "architect",
+          "permit-officer",
+          "planner"
+        ]
+      }
+    },
+    {
+      "name": "RDB",
+      "realmRoles": [
+        "employee",
+        "citizen"
+      ],
+      "clientRoles": {
+        "rdb-portal": [
+          "investor",
+          "rdb-staff",
+          "tourism-operator",
+          "government-official"
+        ]
+      }
+    },
+    {
+      "name": "RRA",
+      "realmRoles": [
+        "employee",
+        "citizen",
+        "auditor"
+      ],
+      "clientRoles": {
+        "myrra-portal": [
+          "taxpayer",
+          "rra-officer",
+          "finance-official"
+        ]
+      }
+    },
+    {
+      "name": "MINISANTE",
+      "realmRoles": [
+        "employee"
+      ],
+      "clientRoles": {
+        "hmis-portal": [
+          "clinician",
+          "data-manager",
+          "chws",
+          "health-planner"
+        ]
+      }
+    },
+    {
+      "name": "MIFOTRA",
+      "realmRoles": [
+        "employee",
+        "auditor"
+      ],
+      "clientRoles": {
+        "ippis-portal": [
+          "public-servant",
+          "hr-officer",
+          "payroll-officer",
+          "management-official"
+        ]
+      }
+    },
+    {
+      "name": "IREMBO",
+      "realmRoles": [
+        "employee",
+        "citizen"
+      ],
+      "clientRoles": {
+        "irembo-portal": [
+          "service-user",
+          "admin"
+        ]
+      }
+    },
+    {
+      "name": "MINAGRI",
+      "realmRoles": [
+        "employee"
+      ],
+      "clientRoles": {
+        "minagri": [
+          "farmer",
+          "agricultural-officer",
+          "crop-inspector",
+          "export-coordinator"
+        ]
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "kubaka-web",
+      "name": "KUBAKA Portal - MININFRA",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "kubaka-secret-key",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "redirectUris": [
+        "http://localhost:3001/*",
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3001",
+        "http://localhost:5173"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:3001/*"
+      },
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "rdb-portal",
+      "name": "RDB e-Services Portal",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "rdb-secret-key",
+      "redirectUris": [
+        "http://localhost:3002/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3002"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:3002/*"
+      },
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "myrra-portal",
+      "name": "MyRRA Portal",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "myrra-secret-key",
+      "redirectUris": [
+        "http://localhost:3003/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3003"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:3003/*"
+      },
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "hmis-portal",
+      "name": "HMIS Portal - MINISANTE",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "hmis-secret-key",
+      "redirectUris": [
+        "http://localhost:7001/callback",
+        "http://127.0.0.1:7001/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:7001",
+        "http://127.0.0.1:7001"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:7001/*"
+      },
+      "protocol": "openid-connect",
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "serviceAccountsEnabled": true
+    },
+    {
+      "clientId": "ippis-portal",
+      "name": "IPPIS Portal - MIFOTRA",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "ippis-secret-key",
+      "redirectUris": [
+        "http://localhost:3005/*",
+        "http://localhost:5000/*",
+        "http://localhost:5001/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3005",
+        "http://localhost:5000",
+        "http://localhost:5001"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:3005/*##http://localhost:5000/*##http://localhost:5001/*"
+      },
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "irembo-portal",
+      "name": "IREMBO Portal",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "irembo-secret-key",
+      "redirectUris": [
+        "http://localhost:3006/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3006"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:3006/*"
+      },
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "sso-client",
+      "name": "SSO API Client",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "qhj1GrsbwxcYSaaXvVfIuUsqi5Pedc7g",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "redirectUris": [
+        "http://localhost:8000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8000"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:8000/*"
+      },
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "minagri",
+      "name": "Ministry of Agriculture Portal",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "ibJuzsoX7HA0NrdbPmTd1U2rJNL1Fgtt",
+      "redirectUris": [
+        "http://localhost:9000/callback",
+        "http://127.0.0.1:9000/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:9000",
+        "http://127.0.0.1:9000"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:9000/*"
+      },
+      "protocol": "openid-connect",
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "serviceAccountsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@gov.rw",
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "realmRoles": [
+        "admin",
+        "gov-admin",
+        "employee"
+      ],
+      "groups": [
+        "MININFRA",
+        "RDB",
+        "RRA",
+        "MINISANTE",
+        "MIFOTRA",
+        "IREMBO"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Admin@2024#Secure",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "realm-management": [
+          "realm-admin",
+          "manage-clients",
+          "manage-users",
+          "view-clients",
+          "view-users"
+        ],
+        "sso-client": [
+          "admin"
+        ],
+        "kubaka-web": [
+          "admin",
+          "landowner",
+          "architect",
+          "permit-officer",
+          "planner"
+        ],
+        "rdb-portal": [
+          "admin",
+          "investor",
+          "rdb-staff"
+        ],
+        "myrra-portal": [
+          "admin",
+          "taxpayer",
+          "rra-officer"
+        ],
+        "hmis-portal": [
+          "admin",
+          "clinician",
+          "data-manager"
+        ],
+        "ippis-portal": [
+          "admin",
+          "public-servant",
+          "hr-officer"
+        ],
+        "irembo-portal": [
+          "admin",
+          "service-user"
+        ]
+      }
+    },
+    {
+      "username": "service-account-sso-client",
+      "email": "service-account-sso-client@gov.rw",
+      "emailVerified": true,
+      "enabled": true,
+      "serviceAccountClientId": "sso-client",
+      "clientRoles": {
+        "realm-management": [
+          "view-realm",
+          "view-users",
+          "view-clients",
+          "view-events",
+          "query-users",
+          "query-clients",
+          "query-groups",
+          "manage-clients",
+          "manage-authorization"
+        ]
+      }
+    },
+    {
+      "username": "kwizera_landowner",
+      "email": "kwizera.landowner@mininfra.gov.rw",
+      "emailVerified": true,
+      "firstName": "Kwizera",
+      "lastName": "Landowner",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MININFRA"
+      ]
+    },
+    {
+      "username": "uwimana_architect",
+      "email": "uwimana.architect@mininfra.gov.rw",
+      "emailVerified": true,
+      "firstName": "Uwimana",
+      "lastName": "Architect",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MININFRA"
+      ]
+    },
+    {
+      "username": "mutoni_permitofficer",
+      "email": "mutoni.permitofficer@mininfra.gov.rw",
+      "emailVerified": true,
+      "firstName": "Mutoni",
+      "lastName": "PermitOfficer",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MININFRA"
+      ]
+    },
+    {
+      "username": "niyonzima_planner",
+      "email": "niyonzima.planner@mininfra.gov.rw",
+      "emailVerified": true,
+      "firstName": "Niyonzima",
+      "lastName": "Planner",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MININFRA"
+      ]
+    },
+    {
+      "username": "amahoro_investor",
+      "email": "amahoro.investor@rdb.gov.rw",
+      "emailVerified": true,
+      "firstName": "Amahoro",
+      "lastName": "Investor",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "RDB"
+      ]
+    },
+    {
+      "username": "bizimana_rdbstaff",
+      "email": "bizimana.rdbstaff@rdb.gov.rw",
+      "emailVerified": true,
+      "firstName": "Bizimana",
+      "lastName": "RDBStaff",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "RDB"
+      ]
+    },
+    {
+      "username": "ingabire_tourism",
+      "email": "ingabire.tourism@rdb.gov.rw",
+      "emailVerified": true,
+      "firstName": "Ingabire",
+      "lastName": "TourismOperator",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "RDB"
+      ]
+    },
+    {
+      "username": "habimana_govofficial",
+      "email": "habimana.govofficial@rdb.gov.rw",
+      "emailVerified": true,
+      "firstName": "Habimana",
+      "lastName": "GovOfficial",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "RDB"
+      ]
+    },
+    {
+      "username": "uwamahoro_taxpayer",
+      "email": "uwamahoro.taxpayer@rra.gov.rw",
+      "emailVerified": true,
+      "firstName": "Uwamahoro",
+      "lastName": "Taxpayer",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "RRA"
+      ]
+    },
+    {
+      "username": "nshimiyimana_rraofficer",
+      "email": "nshimiyimana.rraofficer@rra.gov.rw",
+      "emailVerified": true,
+      "firstName": "Nshimiyimana",
+      "lastName": "RRAOfficer",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "RRA"
+      ]
+    },
+    {
+      "username": "nyirahabimana_finance",
+      "email": "nyirahabimana.finance@rra.gov.rw",
+      "emailVerified": true,
+      "firstName": "Nyirahabimana",
+      "lastName": "FinanceOfficial",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "RRA"
+      ]
+    },
+    {
+      "username": "gasana_clinician",
+      "email": "gasana.clinician@minisante.gov.rw",
+      "emailVerified": true,
+      "firstName": "Gasana",
+      "lastName": "Clinician",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MINISANTE"
+      ]
+    },
+    {
+      "username": "iradukunda_datamanager",
+      "email": "iradukunda.datamanager@minisante.gov.rw",
+      "emailVerified": true,
+      "firstName": "Iradukunda",
+      "lastName": "DataManager",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MINISANTE"
+      ]
+    },
+    {
+      "username": "munyaneza_chw",
+      "email": "munyaneza.chw@minisante.gov.rw",
+      "emailVerified": true,
+      "firstName": "Munyaneza",
+      "lastName": "CHW",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MINISANTE"
+      ]
+    },
+    {
+      "username": "mukamana_healthplanner",
+      "email": "mukamana.healthplanner@minisante.gov.rw",
+      "emailVerified": true,
+      "firstName": "Mukamana",
+      "lastName": "HealthPlanner",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MINISANTE"
+      ]
+    },
+    {
+      "username": "nkurunziza_publicservant",
+      "email": "nkurunziza.publicservant@mifotra.gov.rw",
+      "emailVerified": true,
+      "firstName": "Nkurunziza",
+      "lastName": "PublicServant",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MIFOTRA"
+      ]
+    },
+    {
+      "username": "uwera_hrofficer",
+      "email": "uwera.hrofficer@mifotra.gov.rw",
+      "emailVerified": true,
+      "firstName": "Uwera",
+      "lastName": "HROfficer",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MIFOTRA"
+      ]
+    },
+    {
+      "username": "rukundo_payroll",
+      "email": "rukundo.payroll@mifotra.gov.rw",
+      "emailVerified": true,
+      "firstName": "Rukundo",
+      "lastName": "PayrollOfficer",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MIFOTRA"
+      ]
+    },
+    {
+      "username": "twagirayezu_management",
+      "email": "twagirayezu.management@mifotra.gov.rw",
+      "emailVerified": true,
+      "firstName": "Twagirayezu",
+      "lastName": "ManagementOfficial",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MIFOTRA"
+      ]
+    },
+    {
+      "username": "nyirahabimana_irembo_employee",
+      "email": "nyirahabimana.employee@irembo.gov.rw",
+      "emailVerified": true,
+      "firstName": "Nyirahabimana",
+      "lastName": "Employee",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "IREMBO"
+      ]
+    },
+    {
+      "username": "twagirayezu_irembo_citizen",
+      "email": "twagirayezu.citizen@irembo.gov.rw",
+      "emailVerified": true,
+      "firstName": "Twagirayezu",
+      "lastName": "Citizen",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "IREMBO"
+      ]
+    },
+    {
+      "username": "kamanzi_farmer",
+      "email": "kamanzi.farmer@minagri.gov.rw",
+      "emailVerified": true,
+      "firstName": "Kamanzi",
+      "lastName": "Farmer",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MINAGRI"
+      ]
+    },
+    {
+      "username": "uwase_agofficer",
+      "email": "uwase.agofficer@minagri.gov.rw",
+      "emailVerified": true,
+      "firstName": "Uwase",
+      "lastName": "AgOfficer",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "GovRwanda@2025",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "MINAGRI"
+      ]
+    }
+  ],
+  "permanentLockout": false,
+  "maxTemporaryLockouts": 0,
+  "bruteForceStrategy": "MULTIPLE",
+  "minimumQuickLoginWaitSeconds": 900,
+  "quickLoginCheckMilliSeconds": 0,
+  "maxDeltaTimeSeconds": 43200
+}

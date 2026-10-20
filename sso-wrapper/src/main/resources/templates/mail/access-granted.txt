@@ -1,0 +1,17 @@
+Hello [(${name})],
+
+Your existing Government of Rwanda single sign-on account, for [(${institution})],
+has been given access to:
+[# th:each="app : ${applications}"]  - [(${app})]
+[/][# th:if="${#lists.isEmpty(applications)}"]  (none)
+[/]
+  Username: [(${username})]
+  Sign in:  [(${loginUrl})]
+
+Nothing else about your account has changed — your password is the same one you
+already use. If you were signed in already, sign out and back in for the new
+applications to appear.
+
+Nobody will ever ask you for your password. This message does not contain one.
+
+— Government of Rwanda SSO

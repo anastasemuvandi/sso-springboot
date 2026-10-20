@@ -1,0 +1,3 @@
+rw.gov.risa.sso.starter.GorssoResourceServerAutoConfiguration
+rw.gov.risa.sso.starter.GorssoWebSecurityAutoConfiguration
+rw.gov.risa.sso.starter.GorssoWebMvcAutoConfiguration

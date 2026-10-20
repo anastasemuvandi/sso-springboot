@@ -1,0 +1,750 @@
+/* ===========================================================================
+   gor-admin — GoR SSO administration console sign-in
+   ---------------------------------------------------------------------------
+   Tokens are lifted verbatim from admin-ui/app/globals.css so the sign-in page
+   and the console it hands off to are the same design, not two that resemble
+   each other. When a token changes there, change it here — they are duplicated
+   because Keycloak renders outside the Next.js bundle and cannot import it.
+
+   Structure: a two-column split. Left is the form; right is a decorative brand
+   panel that is aria-hidden and disappears entirely under 980px, so the form
+   is never competing with it for space on a laptop or a phone.
+
+   The .gor-* classes are ours. The kc*Class keys in theme.properties point the
+   INHERITED templates (OTP, reset password, update password, error) at these
+   same classes, which is why those pages come out styled without a .ftl each.
+   =========================================================================== */
+
+/* --- tokens --------------------------------------------------------------- */
+:root {
+  --page:              200 50% 95%;
+  --foreground:        222 47% 11%;
+  --card:              0 0% 100%;
+  --primary:           211 89% 52%;
+  --primary-foreground: 0 0% 100%;
+  --primary-soft:      211 96% 92%;
+  --muted:             210 20% 96%;
+  --muted-foreground:  215 16% 47%;
+  --accent:            210 33% 95%;
+  --destructive:       0 72% 51%;
+  --success:           142 71% 35%;
+  --warning:           35 92% 45%;
+  --border:            214 32% 91%;
+  --ring:              211 89% 52%;
+
+  --radius:      0.75rem;
+  --radius-md:   0.5rem;   /* calc(radius - 4px), matches shadcn rounded-md  */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 24px -12px rgba(15, 23, 42, .10);
+
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Keycloak renders in whatever the viewer's OS prefers; the console follows a
+   .dark class it controls. Matching on prefers-color-scheme is the closest
+   equivalent available here, using admin-ui's own dark token values. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page:              222 47% 10%;
+    --foreground:        210 20% 96%;
+    --card:              222 47% 13%;
+    --primary:           211 89% 60%;
+    --primary-foreground: 222 47% 11%;
+    --primary-soft:      211 60% 22%;
+    --muted:             222 30% 17%;
+    --muted-foreground:  215 16% 65%;
+    --accent:            222 30% 20%;
+    --destructive:       0 62% 50%;
+    --success:           142 60% 45%;
+    --warning:           35 85% 55%;
+    --border:            222 30% 22%;
+    --ring:              211 89% 60%;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, .28), 0 8px 24px -12px rgba(0, 0, 0, .55);
+  }
+}
+
+/* --- base ----------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+.gor-html { height: 100%; }
+
+.gor-body {
+  margin: 0;
+  min-height: 100%;
+  background: hsl(var(--page));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01", "ss03";
+}
+
+/* --- split layout --------------------------------------------------------- */
+.gor-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.gor-split__form {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem 1.5rem;
+}
+
+/* --- card ----------------------------------------------------------------- */
+.gor-card {
+  width: 100%;
+  max-width: 27rem;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / .6);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 2rem;
+}
+
+/* --- brand (above the title, inside the card) ----------------------------- */
+.gor-brand {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: 1.75rem;
+}
+.gor-brand__mark { width: 2.25rem; height: 2.25rem; object-fit: contain; }
+.gor-brand__text { display: flex; flex-direction: column; line-height: 1.25; }
+.gor-brand__line1 { font-size: .875rem; font-weight: 600; letter-spacing: -.01em; }
+.gor-brand__line2 { font-size: .75rem; color: hsl(var(--muted-foreground)); }
+
+/* --- headings ------------------------------------------------------------- */
+.gor-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+.gor-subtitle {
+  margin: .375rem 0 1.5rem;
+  font-size: .875rem;
+  color: hsl(var(--muted-foreground));
+}
+.gor-card__head + #kc-content .gor-subtitle { margin-top: .375rem; }
+
+.gor-required-note { font-size: .75rem; color: hsl(var(--muted-foreground)); margin-bottom: .5rem; }
+.gor-required { color: hsl(var(--destructive)); }
+
+/* Re-auth context: "you are signing in as X" */
+.gor-username {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: .75rem; margin-top: .5rem;
+  font-size: .875rem;
+}
+.gor-username__name { font-weight: 500; }
+.gor-username__reset { font-size: .8125rem; }
+
+/* --- form ----------------------------------------------------------------- */
+.gor-form { margin: 0; }
+
+.gor-group { margin-bottom: 1rem; }
+.gor-form-setting { margin-bottom: 1.25rem; }
+
+.gor-label {
+  display: block;
+  margin-bottom: .375rem;
+  font-size: .875rem;
+  font-weight: 500;
+}
+
+.gor-input {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0 .75rem;
+  font: inherit;
+  font-size: .875rem;
+  color: hsl(var(--foreground));
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.gor-input::placeholder { color: hsl(var(--muted-foreground)); }
+.gor-input:focus {
+  outline: none;
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 3px hsl(var(--ring) / .18);
+}
+.gor-input[aria-invalid="true"] { border-color: hsl(var(--destructive)); }
+.gor-input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px hsl(var(--destructive) / .18); }
+
+.gor-field-error {
+  display: block;
+  margin-top: .375rem;
+  font-size: .8125rem;
+  color: hsl(var(--destructive));
+}
+.gor-help { display: block; margin-top: .375rem; font-size: .8125rem; color: hsl(var(--muted-foreground)); }
+
+/* password field + reveal button */
+.gor-input-group { position: relative; display: block; }
+.gor-input-group .gor-input { padding-right: 2.75rem; }
+
+.gor-eye {
+  position: absolute;
+  top: 50%;
+  right: .25rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  color: hsl(var(--muted-foreground));
+  background: none;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.gor-eye:hover { color: hsl(var(--foreground)); background: hsl(var(--accent)); }
+.gor-eye:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: -2px; }
+.gor-eye .gor-eye__slash { opacity: 0; transition: opacity .12s ease; }
+.gor-eye.gor-eye--on .gor-eye__slash { opacity: 1; }
+
+/* options row: remember-me on the left, forgot-password on the right */
+.gor-form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.gor-check { display: inline-flex; align-items: center; gap: .5rem; cursor: pointer; }
+.gor-check__input {
+  width: 1rem; height: 1rem; margin: 0;
+  accent-color: hsl(var(--primary));
+  cursor: pointer;
+}
+.gor-check__label { font-size: .875rem; color: hsl(var(--muted-foreground)); }
+
+/* --- buttons -------------------------------------------------------------- */
+.gor-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  height: 2.25rem;
+  padding: 0 1rem;
+  font: inherit;
+  font-size: .875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, opacity .15s ease;
+}
+.gor-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px hsl(var(--ring) / .35); }
+.gor-btn:disabled { opacity: .5; pointer-events: none; }
+
+.gor-btn--primary {
+  color: hsl(var(--primary-foreground));
+  background: hsl(var(--primary));
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .10);
+}
+.gor-btn--primary:hover { background: hsl(var(--primary) / .9); }
+
+.gor-btn--default,
+.gor-btn--secondary {
+  color: hsl(var(--foreground));
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+.gor-btn--default:hover,
+.gor-btn--secondary:hover { background: hsl(var(--accent)); }
+
+.gor-btn--lg    { height: 2.5rem; padding: 0 1.5rem; }
+.gor-btn--block { width: 100%; }
+
+.gor-form-buttons { margin-top: .25rem; }
+
+/* --- links ---------------------------------------------------------------- */
+.gor-link {
+  color: hsl(var(--primary));
+  font-size: .875rem;
+  font-weight: 500;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+.gor-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+.gor-link:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; border-radius: 2px; }
+
+.gor-try-another { margin-top: 1rem; text-align: center; }
+
+#kc-info, .gor-signup {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid hsl(var(--border) / .7);
+  font-size: .875rem;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+}
+
+/* --- alerts --------------------------------------------------------------- */
+.gor-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: .625rem;
+  margin-bottom: 1.25rem;
+  padding: .75rem .875rem;
+  font-size: .875rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+}
+.gor-alert__icon {
+  flex: none;
+  width: 1rem; height: 1rem;
+  margin-top: .125rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .9;
+}
+.gor-alert__title { display: block; }
+
+.gor-alert--error {
+  color: hsl(var(--destructive));
+  background: hsl(var(--destructive) / .08);
+  border-color: hsl(var(--destructive) / .35);
+}
+.gor-alert--warning {
+  color: hsl(var(--warning));
+  background: hsl(var(--warning) / .10);
+  border-color: hsl(var(--warning) / .35);
+}
+.gor-alert--success {
+  color: hsl(var(--success));
+  background: hsl(var(--success) / .10);
+  border-color: hsl(var(--success) / .35);
+}
+.gor-alert--info {
+  color: hsl(var(--primary));
+  background: hsl(var(--primary-soft) / .7);
+  border-color: hsl(var(--primary) / .3);
+}
+
+/* --- identity providers --------------------------------------------------- */
+.gor-social-block { margin-top: 1.25rem; }
+
+.gor-divider {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin: 1.25rem 0;
+  font-size: .75rem;
+  color: hsl(var(--muted-foreground));
+}
+.gor-divider::before, .gor-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: hsl(var(--border));
+}
+
+.gor-social { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.gor-social--grid { grid-template-columns: 1fr 1fr; }
+.gor-social__name { font-size: .875rem; }
+
+/* --- OTP credential chooser (inherited login-otp.ftl) --------------------- */
+.gor-otp-list { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: .5rem; }
+.gor-otp-list__item {
+  padding: .75rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+}
+.gor-otp-list__title { font-size: .875rem; font-weight: 500; }
+
+/* --- locale switcher ------------------------------------------------------ */
+.gor-locale { position: absolute; top: 1.25rem; right: 1.5rem; }
+.gor-locale__dd { position: relative; }
+.gor-locale__current {
+  font: inherit;
+  font-size: .8125rem;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  padding: .3125rem .625rem;
+  cursor: pointer;
+}
+.gor-locale__current:hover { color: hsl(var(--foreground)); }
+.gor-locale__list {
+  position: absolute;
+  right: 0;
+  z-index: 10;
+  min-width: 8rem;
+  margin: .25rem 0 0;
+  padding: .25rem;
+  list-style: none;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  display: none;
+}
+.gor-locale__dd:hover .gor-locale__list,
+.gor-locale__dd:focus-within .gor-locale__list { display: block; }
+.gor-locale__link {
+  display: block;
+  padding: .375rem .5rem;
+  font-size: .8125rem;
+  color: hsl(var(--foreground));
+  text-decoration: none;
+  border-radius: calc(var(--radius-md) - 2px);
+}
+.gor-locale__link:hover { background: hsl(var(--accent)); }
+
+/* --- footer under the card ------------------------------------------------ */
+.gor-foot {
+  max-width: 27rem;
+  margin: 1.5rem auto 0;
+  font-size: .75rem;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+}
+
+/* --- brand panel (right) -------------------------------------------------- */
+.gor-split__brand {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 3rem;
+  color: #fff;
+  background-image:
+    radial-gradient(120% 120% at 85% 15%, hsl(211 95% 75% / .55) 0%, transparent 55%),
+    linear-gradient(135deg, hsl(211 89% 46%) 0%, hsl(213 90% 34%) 100%);
+}
+
+/* Concentric arcs, flag palette — same device as the citizen theme so the two
+   sign-in surfaces read as one family. Purely decorative. */
+.gor-split__brand::after {
+  content: "";
+  position: absolute;
+  right: -18%;
+  bottom: -22%;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 62%);
+  pointer-events: none;
+}
+
+.gor-panel { position: relative; z-index: 1; max-width: 30rem; }
+
+.gor-panel__head { display: flex; align-items: center; gap: .75rem; margin-bottom: 3rem; }
+.gor-panel__logo {
+  width: 2.5rem; height: 2.5rem; object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.25));
+}
+.gor-panel__org {
+  font-size: .8125rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .92;
+}
+
+.gor-panel__tagline {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -.025em;
+}
+.gor-panel__lede {
+  margin: 1rem 0 0;
+  font-size: .9375rem;
+  line-height: 1.65;
+  opacity: .85;
+  max-width: 26rem;
+}
+
+.gor-panel__list {
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .625rem;
+  font-size: .875rem;
+  opacity: .9;
+}
+.gor-panel__list li { display: flex; align-items: center; gap: .625rem; }
+.gor-panel__dot {
+  flex: none;
+  width: .375rem; height: .375rem;
+  border-radius: 50%;
+  background: #fad201;
+  box-shadow: 0 0 0 3px rgba(250, 210, 1, .18);
+}
+
+.gor-panel__foot {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  margin-top: 3.5rem;
+  font-size: .75rem;
+  opacity: .8;
+}
+.gor-flag {
+  display: inline-flex;
+  width: 1.25rem; height: .875rem;
+  border-radius: 2px;
+  overflow: hidden;
+  flex-direction: column;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.25);
+}
+.gor-flag__stripe { flex: 1; }
+
+/* --- responsive ----------------------------------------------------------- */
+@media (max-width: 980px) {
+  .gor-split { grid-template-columns: 1fr; }
+  .gor-split__brand { display: none; }
+  .gor-split__form { padding: 2rem 1.25rem 1.5rem; }
+}
+
+@media (max-width: 420px) {
+  .gor-card { padding: 1.5rem; border-radius: var(--radius-md); }
+  .gor-title { font-size: 1.375rem; }
+  .gor-locale { top: .75rem; right: 1rem; }
+}
+
+/* Short viewports: stop the card being vertically centred and clipped. */
+@media (max-height: 720px) {
+  .gor-split__form { justify-content: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* ---------------------------------------------------------------------------
+   Inherited pages
+   ---------------------------------------------------------------------------
+   Pages this theme does not override (error, info, expired, page-expired,
+   webauthn, delete-account, …) come from keycloak.v2. Most of their markup
+   routes through the kc*Class keys and is already covered above, but a few
+   emit unclassed or id-only elements that no property points at:
+
+       error.ftl        #kc-error-message > p.instruction
+       info.ftl         #kc-info-message  > p.instruction, p.kc-feedback-text
+       several          bare <p>, <ul>, <a> directly inside the card
+
+   Without the rules below those pages render as unstyled browser defaults —
+   Times New Roman on white — inside an otherwise designed card, which reads as
+   a broken page rather than a plain one. Styling the hooks costs a dozen rules
+   and removes the need to override each template just to make it presentable.
+   --------------------------------------------------------------------------- */
+#kc-error-message,
+#kc-info-message {
+  margin-top: .25rem;
+}
+
+p.instruction,
+p.kc-feedback-text,
+#kc-content-wrapper > p {
+  margin: 0 0 1rem;
+  font-size: .875rem;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+}
+
+/* error.ftl's "Back to Application" is a bare <a> with no class of its own. */
+#kc-content-wrapper a:not([class]) {
+  color: hsl(var(--primary));
+  font-weight: 500;
+  text-decoration: none;
+}
+#kc-content-wrapper a:not([class]):hover { text-decoration: underline; text-underline-offset: 4px; }
+
+#kc-content-wrapper ul { margin: 0 0 1rem; padding-left: 1.25rem; font-size: .875rem; }
+#kc-content-wrapper li { margin-bottom: .25rem; }
+
+/* Inherited forms that post a single confirm/cancel pair. */
+#kc-content-wrapper input[type="submit"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  padding: 0 1.5rem;
+  font: inherit;
+  font-size: .875rem;
+  font-weight: 500;
+  color: hsl(var(--primary-foreground));
+  background: hsl(var(--primary));
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+#kc-content-wrapper input[type="submit"]:hover { background: hsl(var(--primary) / .9); }
+
+/* --- TOTP / 2FA pages (inherited from keycloak.v2) ------------------------
+   docs/implemented/mfa-totp.md. These pages come from the parent and use its
+   field/button macros, which emit markup this theme's own pages do not:
+   the input's class goes on a wrapping <span>, the primary button carries no
+   base class, and PatternFly utility classes arrive with no PatternFly loaded. */
+
+.gor-otp-help {
+  margin: .75rem 0 1rem;
+  font-size: .875rem;
+  line-height: 1.55;
+  color: hsl(var(--muted-foreground));
+}
+
+/* field.ftl: <span class="gor-input"><input></span> */
+span.gor-input { display: flex; align-items: center; padding: 0; }
+span.gor-input > input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 .75rem;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+span.gor-input:focus-within {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 3px hsl(var(--ring) / .18);
+}
+
+/* buttons.ftl emits kcButtonPrimaryClass without kcButtonClass. */
+.gor-btn--primary:not(.gor-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  padding: 0 1rem;
+  font: inherit;
+  font-size: .875rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+/* The parent's screen-reader-only text ("Warning alert:"). */
+.pf-screen-reader,
+.pf-v5-screen-reader {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+#kc-totp-settings { margin: 0 0 1.25rem; padding-left: 1.25rem; font-size: .875rem; line-height: 1.55; }
+#kc-totp-settings > li { margin-bottom: .875rem; }
+#kc-totp-supported-apps { margin: .375rem 0 0; padding-left: 1.125rem; color: hsl(var(--muted-foreground)); }
+#kc-totp-secret-qr-code {
+  display: block;
+  width: 192px;
+  height: 192px;
+  margin: .5rem 0;
+  padding: .5rem;
+  background: #fff;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+}
+#kc-totp-secret-key {
+  display: inline-block;
+  padding: .375rem .625rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .08em;
+  word-break: break-all;
+  background: hsl(var(--muted));
+  border-radius: var(--radius-md);
+}
+
+/* select-authenticator.ftl: a list of clickable cards. */
+#kc-content-wrapper ul.select-auth-container { list-style: none; margin: .75rem 0 0; padding: 0; display: grid; gap: .625rem; }
+.select-auth-container > li { margin: 0; padding: 0; }
+.select-auth-box-parent {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .875rem 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.select-auth-box-parent:hover { border-color: hsl(var(--ring)); background: hsl(var(--accent)); }
+.select-auth-box-parent .pf-v5-c-data-list__item-content { flex: 1; }
+.select-auth-box-headline { margin: 0; font-size: .9375rem; font-weight: 600; }
+.select-auth-box-desc { margin-top: .125rem; font-size: .8125rem; line-height: 1.45; color: hsl(var(--muted-foreground)); }
+
+/* login-recovery-authn-code-config.ftl */
+.kc-recovery-codes-warning {
+  margin-bottom: 1rem;
+  padding: .75rem .875rem;
+  font-size: .875rem;
+  border: 1px solid hsl(var(--warning) / .35);
+  background: hsl(var(--warning) / .08);
+  border-radius: var(--radius-md);
+}
+.kc-recovery-codes-warning .gor-alert__title { margin: 0 0 .25rem; font-size: .875rem; }
+#kc-recovery-codes-list {
+  margin: 0 0 .75rem;
+  padding: .75rem 1rem .75rem 2.25rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .25rem 1.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .875rem;
+  background: hsl(var(--muted));
+  border-radius: var(--radius-md);
+}
+#printRecoveryCodes, #downloadRecoveryCodes, #copyRecoveryCodes {
+  margin-right: 1rem;
+  padding: .25rem 0;
+  font: inherit;
+  font-size: .875rem;
+  color: hsl(var(--primary));
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+#printRecoveryCodes:hover, #downloadRecoveryCodes:hover, #copyRecoveryCodes:hover { text-decoration: underline; }
+.pf-v5-c-check { display: flex; align-items: center; gap: .5rem; }
+.pf-v5-c-check__label { font-size: .875rem; color: hsl(var(--muted-foreground)); }
+/* The "I have saved these codes" row; the sign-in page's own .gor-form-options
+   row (remember me / forgot password) keeps its space-between layout. */
+.gor-form-options.pf-v5-u-mt-md { justify-content: flex-start; gap: .5rem; margin-top: .75rem; }
+.gor-form-options.pf-v5-u-mt-md > label { margin: 0; font-size: .875rem; }
+
+/* --- print ---------------------------------------------------------------- */
+@media print {
+  .gor-split__brand, .gor-locale { display: none; }
+}
+
+/* "Didn't get the email to set your password?" — template.ftl, sign-in pages */
+.gor-setup-link {
+  margin-top: 1rem;
+  font-size: .875rem;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+}

@@ -1,0 +1,230 @@
+# GoRSSO wrapper configuration.
+# Environment variable names are the reference platform's (KEYCLOAK_*, ACCESS_DEFAULT_DENY, ...);
+# each is mapped onto a property here. Secrets also accept <NAME>_FILE (see FileBackedSecretsPostProcessor).
+# FEATURE BLOCKS: each feature owns one clearly marked block below. Add yours with an Edit, never rewrite the file.
+
+server:
+  port: ${PORT:8000}
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:framework}
+  shutdown: graceful
+
+spring:
+  application:
+    name: sso-wrapper
+  main:
+    banner-mode: off
+  jackson:
+    default-property-inclusion: always
+    deserialization:
+      fail-on-unknown-properties: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6380}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2s
+  # The identity mirror (sso_identity) is optional: these autoconfigs stay off and the IPPIS
+  # feature wires its own DataSource/JPA/Flyway only when IDENTITY_DATABASE_URL is set.
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${SMTP_STARTTLS:true}
+      mail.smtp.ssl.enable: ${SMTP_USE_SSL:false}
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+  thymeleaf:
+    check-template-location: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  health:
+    mail:
+      enabled: false
+    redis:
+      enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /docs/api
+  default-produces-media-type: application/json
+  writer-with-order-by-keys: true
+
+logging:
+  level:
+    root: INFO
+    org.keycloak: WARN
+
+# ---------------------------------------------------------------------------------------------
+# core
+sso:
+  debug: ${DEBUG:false}
+  environment: ${APP_ENV:dev}
+  api-base-url: ${API_BASE_URL:http://localhost:8000}
+  keycloak:
+    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
+    public-url: ${KEYCLOAK_PUBLIC_URL:http://localhost:8080}
+    local-issuer: ${KEYCLOAK_LOCAL_ISSUER:http://localhost:8080}
+    realm: ${KEYCLOAK_REALM:government-internal}
+    client-id: ${KEYCLOAK_CLIENT_ID:sso-client}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+    exempt-clients: ${ACCESS_ENFORCEMENT_EXEMPT_CLIENTS:sso-client,sso-admin-ui,account,account-console,admin-cli,broker,realm-management,security-admin-console}
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    default-limit: ${RATE_LIMIT_DEFAULT:1000/hour}
+  audit:
+    service-url: ${AUDIT_SERVICE_URL:http://localhost:8001}
+    api-key: ${AUDIT_API_KEY:}
+    timeout: ${AUDIT_TIMEOUT:2s}
+    outbox-drain-interval: ${AUDIT_OUTBOX_DRAIN_INTERVAL:15s}
+
+# ---------------------------------------------------------------------------------------------
+# FEATURE BLOCKS (one per feature). Each block is its OWN YAML document starting with `---` and a
+# top-level `sso:` key (a second top-level `sso:` in one document is rejected). Spring merges them.
+
+# ---------------------------------------------------------------------------------------------
+# shared-services (client access, delegation config, join key, mail, SA roles) — docs/implemented/shared-services.md
+---
+sso:
+  access:
+    default-deny: ${ACCESS_DEFAULT_DENY:true}
+  delegated:
+    permissions-config: ${DELEGATED_PERMISSIONS_CONFIG:configs/delegated-permissions/templates.json}
+    institution-registry-config: ${INSTITUTION_REGISTRY_CONFIG:configs/institutions.yaml}
+    guardrail-enforce: ${DELEGATED_GUARDRAIL_ENFORCE:true}
+    claim-crosscheck: ${DELEGATED_CLAIM_CROSSCHECK:true}
+    institution-claim: ${DELEGATED_INSTITUTION_CLAIM:institution}
+    execute-as-caller: ${DELEGATED_EXECUTE_AS_CALLER:true}
+  join-key:
+    enforce: ${JOIN_KEY_ENFORCE:true}
+    enforce-unset-clients: ${JOIN_KEY_ENFORCE_UNSET_CLIENTS:false}
+    validate-format: ${JOIN_KEY_VALIDATE_FORMAT:true}
+    readiness-limit: ${JOIN_KEY_READINESS_LIMIT:200}
+  mail:
+    from: ${SMTP_FROM:sso-noreply@gov.rw}
+    login-url: ${SSO_LOGIN_URL:http://localhost:3001}
+    notify-access-changes: ${NOTIFY_ACCESS_CHANGES:true}
+  service-account-roles:
+    reconcile: ${RECONCILE_SERVICE_ACCOUNT_ROLES:true}
+    admin-realm: ${KEYCLOAK_ADMIN_REALM:master}
+    admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+    admin-password: ${KEYCLOAK_ADMIN_PASSWORD:}
+
+# ---------------------------------------------------------------------------------------------
+# ippis-and-directory (IPPIS client/reconcile/webhook, identity mirror, lifecycle, directory).
+# Its own YAML document so the top-level `sso:` key is not duplicated (Boot rejects duplicate keys).
+---
+sso:
+  identity:
+    # sso_identity — NEVER Keycloak's database. No default on purpose: unset = no mirror (503s).
+    database-url: ${IDENTITY_DATABASE_URL:}
+    username: ${IDENTITY_DATABASE_USER:}
+    password: ${IDENTITY_DATABASE_PASSWORD:}
+    migrate: ${IDENTITY_DB_MIGRATE:true}
+    pool-size: ${IDENTITY_DB_POOL_SIZE:10}
+  ippis:
+    base-url: ${IPPIS_BASE_URL:http://ippis-mock:8002}
+    api-key: ${IPPIS_API_KEY:}
+    timeout: ${IPPIS_SYNC_TIMEOUT:5s}
+    employee-number-attribute: ${IPPIS_EMPLOYEE_NUMBER_ATTRIBUTE:employee_number}
+    concurrency: ${IPPIS_SYNC_CONCURRENCY:10}
+    max-attempts: ${IPPIS_SYNC_MAX_ATTEMPTS:3}
+    retry-backoff: ${IPPIS_SYNC_RETRY_BACKOFF:500ms}
+    page-size: ${IPPIS_SYNC_PAGE_SIZE:100}
+    clear-missing: ${IPPIS_CLEAR_MISSING:false}
+    watermark-key: ${IPPIS_SYNC_WATERMARK_KEY:gorsso:ippis:sync:watermark}
+    auth:
+      method: ${IPPIS_AUTH_METHOD:api_key}
+      oauth-token-url: ${IPPIS_OAUTH_TOKEN_URL:}
+      oauth-client-id: ${IPPIS_OAUTH_CLIENT_ID:}
+      oauth-client-secret: ${IPPIS_OAUTH_CLIENT_SECRET:}
+      oauth-scope: ${IPPIS_OAUTH_SCOPE:}
+      mtls-cert: ${IPPIS_MTLS_CERT:}
+      mtls-key: ${IPPIS_MTLS_KEY:}
+      ca-bundle: ${IPPIS_CA_BUNDLE:}
+    webhook:
+      secret: ${IPPIS_WEBHOOK_SECRET:}
+      max-skew: ${IPPIS_WEBHOOK_MAX_SKEW:300s}
+    schedule:
+      enabled: ${IPPIS_SYNC_SCHEDULE_ENABLED:false}
+      delta-cron: ${IPPIS_SYNC_DELTA_CRON:0 */5 * * * *}
+      full-cron: ${IPPIS_SYNC_FULL_CRON:0 30 2 * * *}
+
+# ---------------------------------------------------------------------------------------------
+# provisioning-and-access-matrix (employee provisioning, access matrix, Excel round-trip)
+# — docs/implemented/provisioning-and-access-matrix.md. Own YAML document (no duplicate `sso:` key).
+---
+sso:
+  provisioning:
+    max-batch: ${EMPLOYEE_PROVISION_MAX_BATCH:100}
+    # Honoured ONLY when DEBUG=true (logged as an ERROR and ignored otherwise).
+    dev-password: ${EMPLOYEE_PROVISION_DEV_PASSWORD:}
+  access-matrix:
+    signing-key: ${ACCESS_MATRIX_SIGNING_KEY:}
+spring:
+  servlet:
+    multipart:
+      # The spreadsheet import accepts up to 5 MB (AccessMatrixSheet.MAX_FILE_BYTES); the parser refuses above it.
+      max-file-size: 6MB
+      max-request-size: 7MB
+
+# ---------------------------------------------------------------------------------------------
+# auth-gateway (/auth, /oauth2, /saml, /account pages) — docs/implemented/auth-gateway.md.
+# Own YAML document (no duplicate `sso:` key).
+---
+sso:
+  gateway:
+    enable-saml: ${ENABLE_SAML:false}
+    # Wrapper-issued (password-flow) authorization codes: single use, PKCE-bound.
+    code-ttl: ${AUTH_CODE_TTL:300s}
+    http-timeout: ${GATEWAY_HTTP_TIMEOUT:10s}
+    # Spec: redirect URIs match EXACTLY. true = also honour a registered trailing '*' (Keycloak's rule).
+    allow-wildcard-redirects: ${REDIRECT_URI_ALLOW_WILDCARDS:false}
+
+# ---------------------------------------------------------------------------------------------
+# institution-admin (/institution-admin/* except provisioning/access matrix) — docs/implemented/institution-admin.md
+---
+sso:
+  institution-admin:
+    audit-read-timeout: ${INSTITUTION_AUDIT_READ_TIMEOUT:10s}
+
+# ---------------------------------------------------------------------------------------------
+# platform-identity-admin (/client, /users, /agency, /roles, /authorization) — docs/implemented/platform-identity-admin.md
+---
+sso:
+  platform:
+    enable-saml: ${ENABLE_SAML:false}
+
+# ---------------------------------------------------------------------------------------------
+# platform-realm-dashboard-ops (/realm, /dashboard, /audit proxy, /delegated-permissions, /admin views, ops
+# commands) — docs/implemented/platform-realm-dashboard-ops.md. Own YAML document (no duplicate `sso:` key).
+# The logo limit (5 MB) sits under the multipart max-file-size (6MB) set above.
+---
+sso:
+  platform-ops:
+    audit-read-timeout: ${AUDIT_READ_TIMEOUT:10s}
+    audit-export-timeout: ${AUDIT_EXPORT_TIMEOUT:60s}
+    overview-cache-ttl: ${PLATFORM_OVERVIEW_CACHE_TTL:60s}
+    logo-max-bytes: ${REALM_LOGO_MAX_BYTES:5242880}

@@ -1,0 +1,25 @@
+target/
+node_modules/
+dist/
+.env
+*.log
+.idea/
+.vscode/
+.tools/
+coverage/
+playwright-report/
+test-results/
+
+# Generated client SDKs (sdk/generate.sh) — CI regenerates them from the committed contract.
+sdk/java/
+sdk/typescript/
+sdk/python/
+# Local env overrides for the sample SPA
+sample-apps/web/.env.local
+sample-apps/web/.env.*.local
+# Terraform local working files and state (never commit state: it holds secrets)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log

@@ -1,0 +1,677 @@
+{
+  "components" : {
+    "schemas" : {
+      "AcknowledgeRequest" : {
+        "properties" : {
+          "acknowledged_by" : {
+            "maxLength" : 255,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "acknowledged_by" ],
+        "type" : "object"
+      },
+      "AlertConfigRead" : {
+        "properties" : {
+          "channels" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "cooldown_minutes" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : [ "string", "null" ]
+          },
+          "rule_name" : {
+            "type" : "string"
+          },
+          "severity" : {
+            "type" : "string"
+          },
+          "threshold" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "updated_at" : {
+            "format" : "date-time",
+            "type" : [ "string", "null" ]
+          },
+          "window_minutes" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "AlertConfigUpdate" : {
+        "properties" : {
+          "channels" : {
+            "description" : "Subset of email, inapp, webhook",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "cooldown_minutes" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "severity" : {
+            "enum" : [ "CRITICAL", "WARNING", "INFO" ],
+            "type" : "string"
+          },
+          "threshold" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "window_minutes" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "AlertRead" : {
+        "properties" : {
+          "acknowledged" : {
+            "type" : "boolean"
+          },
+          "acknowledged_at" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "acknowledged_by" : {
+            "type" : "string"
+          },
+          "app_id" : {
+            "type" : "string"
+          },
+          "created_at" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "details" : {
+            "additionalProperties" : { },
+            "type" : "object"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "ip_address" : {
+            "type" : "string"
+          },
+          "rule_name" : {
+            "type" : "string"
+          },
+          "severity" : {
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "DailyReport" : {
+        "properties" : {
+          "acknowledged" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "by_rule" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "type" : "object"
+          },
+          "critical" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "latest" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AlertRead"
+            },
+            "type" : "array"
+          },
+          "period_end" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "period_start" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "total" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "warning" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "DailyReportSendResult" : {
+        "properties" : {
+          "alert_count" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "error" : {
+            "type" : "string"
+          },
+          "recipient" : {
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "sent", "failed", "skipped" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "MarkAllReadResponse" : {
+        "properties" : {
+          "marked_read" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "NotificationRead" : {
+        "properties" : {
+          "alert_id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "channel" : {
+            "enum" : [ "email", "inapp", "webhook" ],
+            "type" : "string"
+          },
+          "created_at" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "error" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "is_read" : {
+            "type" : "boolean"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "recipient" : {
+            "type" : "string"
+          },
+          "sent_at" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "pending", "sent", "failed", "skipped" ],
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      }
+    },
+    "securitySchemes" : {
+      "NotificationApiKey" : {
+        "in" : "header",
+        "name" : "X-Notification-API-Key",
+        "type" : "apiKey"
+      }
+    }
+  },
+  "info" : {
+    "description" : "Security alert detection, deduplication, and multi-channel delivery",
+    "title" : "GoRSSO Notification Service",
+    "version" : "1.0.0"
+  },
+  "openapi" : "3.1.0",
+  "paths" : {
+    "/alerts" : {
+      "get" : {
+        "operationId" : "list_2",
+        "parameters" : [ {
+          "description" : "Filter by CRITICAL/WARNING/INFO",
+          "in" : "query",
+          "name" : "severity",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Filter by acknowledged status",
+          "in" : "query",
+          "name" : "acknowledged",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "in" : "query",
+          "name" : "rule_name",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "default" : 100,
+            "format" : "int32",
+            "maximum" : 500,
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "default" : 0,
+            "format" : "int32",
+            "minimum" : 0,
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/AlertRead"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "NotificationApiKey" : [ ]
+        } ],
+        "summary" : "List alerts, newest first",
+        "tags" : [ "alerts" ]
+      }
+    },
+    "/alerts/{alert_id}" : {
+      "get" : {
+        "operationId" : "get",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "alert_id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AlertRead"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "NotificationApiKey" : [ ]
+        } ],
+        "summary" : "Get one alert",
+        "tags" : [ "alerts" ]
+      }
+    },
+    "/alerts/{alert_id}/acknowledge" : {
+      "put" : {
+        "operationId" : "acknowledge",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "alert_id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AcknowledgeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AlertRead"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "NotificationApiKey" : [ ]
+        } ],
+        "summary" : "Acknowledge an alert (re-arms its rule's cooldown for that subject)",
+        "tags" : [ "alerts" ]
+      }
+    },
+    "/config" : {
+      "get" : {
+        "operationId" : "list_1",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/AlertConfigRead"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "NotificationApiKey" : [ ]
+        } ],
+        "summary" : "Effective configuration of every rule (DB overrides over the built-in defaults)",
+        "tags" : [ "config" ]
+      }
+    },
+    "/config/{rule_name}" : {
+      "put" : {
+        "operationId" : "update",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "rule_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AlertConfigUpdate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AlertConfigRead"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "NotificationApiKey" : [ ]
+        } ],
+        "summary" : "Override a rule's configuration (partial update; only fields present are changed)",
+        "tags" : [ "config" ]
+      }
+    },
+    "/health" : {
+      "get" : {
+        "operationId" : "health",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "additionalProperties" : {
+                    "type" : "string"
+                  },
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Liveness (reference shape); readiness is /actuator/health/readiness",
+        "tags" : [ "health" ]
+      }
+    },
+    "/notifications" : {
+      "get" : {
+        "operationId" : "list",
+        "parameters" : [ {
+          "description" : "Filter by recipient (user email)",
+          "in" : "query",
+          "name" : "recipient",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "is_read",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "description" : "email | inapp | webhook",
+          "in" : "query",
+          "name" : "channel",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Filter by alert",
+          "in" : "query",
+          "name" : "alert_id",
+          "required" : false,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "default" : 100,
+            "format" : "int32",
+            "maximum" : 500,
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "default" : 0,
+            "format" : "int32",
+            "minimum" : 0,
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/NotificationRead"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "NotificationApiKey" : [ ]
+        } ],
+        "summary" : "List delivery records (one per channel per recipient per alert), newest first",
+        "tags" : [ "notifications" ]
+      }
+    },
+    "/notifications/read-all" : {
+      "put" : {
+        "operationId" : "markAllRead",
+        "parameters" : [ {
+          "description" : "Mark all unread notifications for this recipient",
+          "in" : "query",
+          "name" : "recipient",
+          "required" : true,
+          "schema" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MarkAllReadResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "NotificationApiKey" : [ ]
+        } ],
+        "summary" : "Mark all unread notifications for a recipient as read",
+        "tags" : [ "notifications" ]
+      }
+    },
+    "/notifications/{notification_id}/read" : {
+      "put" : {
+        "operationId" : "markRead",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "notification_id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationRead"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "NotificationApiKey" : [ ]
+        } ],
+        "summary" : "Mark one notification as read",
+        "tags" : [ "notifications" ]
+      }
+    },
+    "/reports/daily" : {
+      "get" : {
+        "operationId" : "daily",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DailyReport"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "NotificationApiKey" : [ ]
+        } ],
+        "summary" : "Summary of the alerts of the last 24 hours",
+        "tags" : [ "reports" ]
+      }
+    },
+    "/reports/daily/send" : {
+      "post" : {
+        "operationId" : "send",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DailyReportSendResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "NotificationApiKey" : [ ]
+        } ],
+        "summary" : "Email the daily report to ADMIN_EMAILS now (also runs at 08:00 Africa/Kigali)",
+        "tags" : [ "reports" ]
+      }
+    }
+  },
+  "servers" : [ {
+    "url" : "http://localhost:8002"
+  } ]
+}

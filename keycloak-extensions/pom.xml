@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  gorsso-mfa: the Keycloak 26.2 providers for TOTP (step-up, realm-attribute and
+  credential conditions, recovery re-enrolment) and the audit event listener.
+
+    mvn -B -f mfa-policy/pom.xml install -DskipTests
+    mvn -B -f keycloak-extensions/pom.xml package      -> target/gorsso-mfa.jar
+    mvn -B -Pit -f keycloak-extensions/pom.xml verify  (also boots Keycloak 26.2 in Docker)
+
+  Every Keycloak dependency is `provided`: the server already carries them, and a
+  second copy is how a provider ends up with two incompatible versions of one class.
+  `mfa-policy` (zero dependencies, our own package) is shaded INTO the jar so the
+  single TOTP rule shared with the wrapper ships with the provider.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>rw.gov.risa.sso</groupId>
+    <artifactId>gorsso-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>keycloak-extensions</artifactId>
+  <name>keycloak-extensions (gorsso-mfa Keycloak SPI)</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>rw.gov.risa.sso</groupId>
+      <artifactId>mfa-policy</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-server-spi</artifactId>
+      <version>${keycloak.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-server-spi-private</artifactId>
+      <version>${keycloak.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <!-- AcrStore, AuthenticationManager and the conditional-authenticator interfaces live here. -->
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-services</artifactId>
+      <version>${keycloak.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <!-- @Tag("it") only: boots quay.io/keycloak/keycloak:26.2 with the provider. -->
+      <groupId>com.github.dasniko</groupId>
+      <artifactId>testcontainers-keycloak</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>gorsso-mfa</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+            <configuration>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <artifactSet>
+                <includes>
+                  <include>rw.gov.risa.sso:mfa-policy</include>
+                </includes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>rw.gov.risa.sso:mfa-policy</artifact>
+                  <excludes>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                    <exclude>META-INF/maven/**</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <transformers combine.self="override">
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

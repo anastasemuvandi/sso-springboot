@@ -1,0 +1,10 @@
+# Context is the repository root; the parent POM, this module and console-web sources.
+**
+!pom.xml
+!console-bff/pom.xml
+!console-bff/src/main/**
+!console-web/**
+console-web/node_modules
+console-web/dist
+console-web/test-results
+console-web/playwright-report

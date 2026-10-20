@@ -1,0 +1,21 @@
+# openapi-generator config — Python client SDK (optional target: `sdk/generate.sh python`).
+# Ported from the reference configs/sdk/python-config.yaml.
+# generator: python (selected by sdk/generate.sh)
+packageName: gorsso
+packageVersion: 1.0.0
+projectName: gorsso-client
+packageUrl: "https://github.com/gov-rw/gorsso"
+library: urllib3
+hideGenerationTimestamp: "true"
+lazyImports: "true"
+recursionLimit: "1000"
+mapNumberTo: "Union[StrictFloat, StrictInt]"
+dateFormat: "%Y-%m-%d"
+datetimeFormat: "%Y-%m-%dT%H:%M:%S%z"
+setEnsureAsciiToFalse: "true"
+sortParamsByRequiredFlag: "true"
+sortModelPropertiesByRequiredFlag: "true"
+allowUnicodeIdentifiers: "false"
+prependFormOrBodyParameters: "false"
+legacyDiscriminatorBehavior: "false"
+disallowAdditionalPropertiesIfNotPresent: "true"

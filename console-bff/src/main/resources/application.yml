@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: console-bff
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+      password: ${REDIS_PASSWORD:}
+  session:
+    # Spring Session Data Redis: sessions (and the tokens inside them) are shared by every BFF instance.
+    timeout: ${BFF_SESSION_TIMEOUT:8h}
+    redis:
+      namespace: ${BFF_SESSION_NAMESPACE:gorsso:bff:session}
+  web:
+    resources:
+      add-mappings: false   # the SPA handler (SpaConfig) serves static files with the history fallback
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          http-client:
+            connect-timeout: ${BFF_WRAPPER_CONNECT_TIMEOUT:5s}
+            read-timeout: ${BFF_WRAPPER_READ_TIMEOUT:120s}
+
+server:
+  port: ${PORT:3001}
+  shutdown: graceful
+  forward-headers-strategy: ${BFF_FORWARD_HEADERS_STRATEGY:framework}
+  servlet:
+    session:
+      timeout: ${BFF_SESSION_TIMEOUT:8h}
+      cookie:
+        name: ${BFF_SESSION_COOKIE:GORSSO_BFF_SESSION}
+        http-only: true
+        secure: ${COOKIE_SECURE:true}
+        same-site: lax
+        path: /
+        # Explicit lifetime (the reference's 8h): browsers evict session cookies aggressively on
+        # untrusted-cert (self-signed staging) connections.
+        max-age: ${BFF_COOKIE_MAX_AGE:8h}
+
+management:
+  endpoints.web.exposure.include: health,info,prometheus
+  endpoint.health.probes.enabled: true
+
+bff:
+  wrapper-url: ${SSO_BASE_URL:http://localhost:8000}
+  wrapper-public-url: ${SSO_PUBLIC_URL:}
+  client-id: ${ADMIN_UI_CLIENT_ID:sso-admin-ui}
+  client-secret: ${ADMIN_UI_CLIENT_SECRET:}
+  redirect-uri: ${ADMIN_UI_REDIRECT_URI:{baseUrl}/login/oauth2/code/{registrationId}}
+  post-logout-redirect-uri: ${ADMIN_UI_POST_LOGOUT_REDIRECT_URI:}
+  issuer-uri: ${BFF_OIDC_ISSUER:}
+  jwk-set-uri: ${BFF_JWK_SET_URI:}
+  user-info-uri: ${BFF_USERINFO_URI:}
+  discovery: ${BFF_OIDC_DISCOVERY:false}
+  refresh-skew: ${BFF_REFRESH_SKEW:30s}
+  spa-dir: ${CONSOLE_WEB_DIST:}
+  content-security-policy: ${BFF_CSP:}
+  cookie-secure: ${COOKIE_SECURE:true}

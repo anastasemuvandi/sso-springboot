@@ -1,0 +1,38 @@
+# openapi-generator config — Java client SDK for the GoRSSO wrapper API.
+# Ported from the reference configs/sdk/{nodejs,python}-config.yaml (same package metadata),
+# retargeted at Java 21 + java.net.http (no extra HTTP client dependency).
+# Used by sdk/generate.sh; inputSpec/outputDir are passed on the command line.
+# generator: java (selected by sdk/generate.sh)
+# Package information
+groupId: rw.gov.risa.sso
+artifactId: gorsso-java-sdk
+artifactVersion: 1.0.0-SNAPSHOT
+artifactDescription: "Official Java SDK for the Government of Rwanda Single Sign-On (GoRSSO) wrapper API"
+artifactUrl: "https://sso.gov.rw"
+scmUrl: "https://github.com/gov-rw/gorsso"
+developerName: "Government of Rwanda (RISA)"
+developerEmail: "tech@gov.rw"
+developerOrganization: "gov-rw"
+developerOrganizationUrl: "https://gov.rw"
+licenseName: "MIT"
+licenseUrl: "https://opensource.org/licenses/MIT"
+# Packages
+invokerPackage: rw.gov.risa.sso.sdk
+apiPackage: rw.gov.risa.sso.sdk.api
+modelPackage: rw.gov.risa.sso.sdk.model
+# Library / language level
+library: native
+serializationLibrary: jackson
+dateLibrary: java8
+useJakartaEe: "true"
+openApiNullable: "false"
+# Generation behaviour (mirrors the reference settings)
+hideGenerationTimestamp: "true"
+sortParamsByRequiredFlag: "true"
+sortModelPropertiesByRequiredFlag: "true"
+ensureUniqueParams: "true"
+allowUnicodeIdentifiers: "false"
+prependFormOrBodyParameters: "false"
+legacyDiscriminatorBehavior: "false"
+disallowAdditionalPropertiesIfNotPresent: "true"
+useOneOfInterfaces: "false"

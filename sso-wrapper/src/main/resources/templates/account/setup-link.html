@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${lang}">
+<head th:replace="~{account/layout :: head}"></head>
+<body>
+<div class="page">
+  <header th:replace="~{account/layout :: brand}"></header>
+  <main class="card">
+    <a class="lang" th:href="${switchUrl}" th:text="${switchLabel}">Kinyarwanda</a>
+    <h1 th:text="${t.title}">Resend your set-password link</h1>
+    <p th:text="${t.intro}">Intro</p>
+    <form method="post" action="setup-link">
+      <input type="hidden" name="lang" th:value="${lang}">
+      <input type="hidden" name="return_to" th:value="${returnTo}">
+      <label for="username" th:text="${t.label}">Your work email</label>
+      <input id="username" name="username" type="email" autocomplete="username" required maxlength="254"
+             th:value="${username}">
+      <button type="submit" th:text="${t.submit}">Send me a new link</button>
+    </form>
+    <p th:replace="~{account/layout :: back}"></p>
+  </main>
+  <footer th:replace="~{account/layout :: footer}"></footer>
+</div>
+</body>
+</html>

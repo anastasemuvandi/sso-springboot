@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${lang}">
+<head th:fragment="head">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <title th:text="${pageTitle} + ' · GoR SSO'">GoR SSO</title>
+  <link rel="stylesheet" href="account.css">
+</head>
+<body>
+<header th:fragment="brand" class="brand">
+  <div class="flag" aria-hidden="true"><span class="b"></span><span class="y"></span><span class="g"></span></div>
+  <div class="brand-text">
+    <span class="gov" th:text="${t.gov}">Republic of Rwanda</span>
+    <span class="svc" th:text="${t.service}">Government Single Sign-On</span>
+  </div>
+</header>
+<p th:fragment="back" class="back" th:if="${back}"><a th:href="${back}">&larr; <span th:text="${t.back}">Back to sign in</span></a></p>
+<footer th:fragment="footer" class="foot"><span th:text="${t.footer}">Government of Rwanda</span></footer>
+</body>
+</html>

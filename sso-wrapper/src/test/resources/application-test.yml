@@ -1,0 +1,14 @@
+# Tests never need a live Keycloak/Redis unless they start Testcontainers themselves.
+sso:
+  debug: true
+  environment: test
+  keycloak:
+    client-secret: test-secret
+  rate-limit:
+    enabled: false
+  audit:
+    api-key: test-audit-key
+    outbox-drain-interval: 1h
+spring:
+  main:
+    lazy-initialization: false

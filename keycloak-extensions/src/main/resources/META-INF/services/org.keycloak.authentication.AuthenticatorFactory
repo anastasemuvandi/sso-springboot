@@ -1,0 +1,4 @@
+rw.gov.risa.sso.mfa.RealmAttributeConditionFactory
+rw.gov.risa.sso.mfa.RecoveryReenrolAuthenticatorFactory
+rw.gov.risa.sso.mfa.CredentialConditionFactory
+rw.gov.risa.sso.mfa.StepUpAuthenticatorFactory

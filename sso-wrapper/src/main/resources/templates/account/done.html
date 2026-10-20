@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${lang}">
+<head th:replace="~{account/layout :: head}"></head>
+<body>
+<div class="page">
+  <header th:replace="~{account/layout :: brand}"></header>
+  <main class="card">
+    <h1 th:text="${t.done2_title}">Your password is set</h1>
+    <p th:text="${t.done2}">Now you can use your account...</p>
+    <th:block th:if="${!#lists.isEmpty(apps)}">
+      <p th:text="${t.choose}">Choose the application to open:</p>
+      <ul class="apps">
+        <li th:each="app : ${apps}">
+          <a th:if="${app.url}" th:href="${app.url}" th:text="${app.name}">App</a>
+          <span th:unless="${app.url}"><th:block th:text="${app.name}">App</th:block> — <th:block th:text="${t.no_url}">address not recorded</th:block></span>
+        </li>
+      </ul>
+    </th:block>
+    <p th:if="${#lists.isEmpty(apps)}" th:text="${t.no_apps}">Open the application you were given...</p>
+  </main>
+  <footer th:replace="~{account/layout :: footer}"></footer>
+</div>
+</body>
+</html>

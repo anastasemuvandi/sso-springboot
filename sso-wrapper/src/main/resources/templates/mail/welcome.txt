@@ -1,0 +1,21 @@
+Hello [(${name})],
+
+An account has been created for you on the Government of Rwanda single sign-on,
+for [(${institution})].
+
+  Username: [(${username})]
+  Sign in:  [(${loginUrl})]
+
+You have been given access to:
+[# th:each="app : ${applications}"]  - [(${app})]
+[/][# th:if="${#lists.isEmpty(applications)}"]  (none yet)
+[/]
+[# th:if="${passwordSetByAdmin}"]Your password has already been set for you. Ask the administrator who created this account for it, and change it after you sign in.[/][# th:if="${!passwordSetByAdmin and setPasswordUrl != null}"]Before you can sign in, choose your password here:
+
+  [(${setPasswordUrl})]
+
+The link works once and expires in [(${lifespanHours})] hours. If it has expired or never arrived, use "Didn't get the email to set your password?" on the sign-in page to get a new one. After you set your password you can pick which application to open.[/][# th:if="${!passwordSetByAdmin and setPasswordUrl == null and passwordEmailSent}"]You will receive a second email from the sign-in service with a link to set your password. Use that link first.[/][# th:if="${!passwordSetByAdmin and setPasswordUrl == null and !passwordEmailSent}"]IMPORTANT: the email with your set-password link could not be sent. Ask your institution's SSO administrator to send it again — until then you cannot sign in.[/]
+
+Nobody will ever ask you for your password. This message does not contain one.
+
+— Government of Rwanda SSO
